@@ -4,8 +4,63 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "097337f296ad15a831c1c98dc6a0a9fd",
+    "content-hash": "7872fd3432da4e726e3a056c6e700418",
     "packages": [
+        {
+            "name": "altorouter/altorouter",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dannyvankooten/AltoRouter.git",
+                "reference": "39c50092470128c12284d332bb57f306bb5b58e4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dannyvankooten/AltoRouter/zipball/39c50092470128c12284d332bb57f306bb5b58e4",
+                "reference": "39c50092470128c12284d332bb57f306bb5b58e4",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "codeclimate/php-test-reporter": "dev-master",
+                "phpunit/phpunit": "4.5.*"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "AltoRouter.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Danny van Kooten",
+                    "email": "dannyvankooten@gmail.com",
+                    "homepage": "http://dannyvankooten.com/"
+                },
+                {
+                    "name": "Koen Punt",
+                    "homepage": "https://github.com/koenpunt"
+                },
+                {
+                    "name": "niahoo",
+                    "homepage": "https://github.com/niahoo"
+                }
+            ],
+            "description": "A lightning fast router for PHP",
+            "homepage": "https://github.com/dannyvankooten/AltoRouter",
+            "keywords": [
+                "lightweight",
+                "router",
+                "routing"
+            ],
+            "time": "2015-11-30T00:47:43+00:00"
+        },
         {
             "name": "jeremeamia/superclosure",
             "version": "2.4.0",
@@ -63,6 +118,52 @@
                 "tokenizer"
             ],
             "time": "2018-03-21T22:21:57+00:00"
+        },
+        {
+            "name": "nikic/fast-route",
+            "version": "v1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nikic/FastRoute.git",
+                "reference": "181d480e08d9476e61381e04a71b34dc0432e812"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nikic/FastRoute/zipball/181d480e08d9476e61381e04a71b34dc0432e812",
+                "reference": "181d480e08d9476e61381e04a71b34dc0432e812",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^4.8.35|~5.7"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FastRoute\\": "src/"
+                },
+                "files": [
+                    "src/functions.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Nikita Popov",
+                    "email": "nikic@php.net"
+                }
+            ],
+            "description": "Fast request router for PHP",
+            "keywords": [
+                "router",
+                "routing"
+            ],
+            "time": "2018-02-13T20:26:39+00:00"
         },
         {
             "name": "nikic/php-parser",
@@ -454,6 +555,82 @@
                 "shim"
             ],
             "time": "2019-08-06T08:03:45+00:00"
+        },
+        {
+            "name": "symfony/routing",
+            "version": "v3.4.32",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/routing.git",
+                "reference": "8b0faa681c4ee14701e76a7056fef15ac5384163"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/routing/zipball/8b0faa681c4ee14701e76a7056fef15ac5384163",
+                "reference": "8b0faa681c4ee14701e76a7056fef15ac5384163",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^5.5.9|>=7.0.8"
+            },
+            "conflict": {
+                "symfony/config": "<3.3.1",
+                "symfony/dependency-injection": "<3.3",
+                "symfony/yaml": "<3.4"
+            },
+            "require-dev": {
+                "doctrine/annotations": "~1.0",
+                "psr/log": "~1.0",
+                "symfony/config": "^3.3.1|~4.0",
+                "symfony/dependency-injection": "~3.3|~4.0",
+                "symfony/expression-language": "~2.8|~3.0|~4.0",
+                "symfony/http-foundation": "~2.8|~3.0|~4.0",
+                "symfony/yaml": "~3.4|~4.0"
+            },
+            "suggest": {
+                "doctrine/annotations": "For using the annotation loader",
+                "symfony/config": "For using the all-in-one router or any loader",
+                "symfony/expression-language": "For using expression matching",
+                "symfony/http-foundation": "For using a Symfony Request object",
+                "symfony/yaml": "For using the YAML loader"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.4-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Routing\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Routing Component",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "router",
+                "routing",
+                "uri",
+                "url"
+            ],
+            "time": "2019-08-26T07:50:50+00:00"
         }
     ],
     "packages-dev": [],

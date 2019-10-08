@@ -2,8 +2,9 @@
 
 namespace TheApp\Apps;
 
+use AltoRouter;
 use Psr\Container\ContainerInterface;
-use TheApp\Interfaces\ConfigInterface;
+use TheApp\Handlers\TestHandler;
 
 /**
  * Class WebApp
@@ -11,23 +12,52 @@ use TheApp\Interfaces\ConfigInterface;
  */
 class WebApp
 {
-    /** @var ConfigInterface */
-    private $config;
+    /** @var ContainerInterface */
+    private $container;
+
+    /** @var AltoRouter */
+    private $router;
 
     /**
      * WebApp constructor.
-     * @param ConfigInterface $config
+     * @param AltoRouter $router
+     * @param ContainerInterface $container
      */
-    public function __construct(ConfigInterface $config)
-    {
-        $this->config = $config;
+    public function __construct(
+        AltoRouter $router,
+        ContainerInterface $container
+    ) {
+        $this->container = $container;
+        $this->router = $router;
     }
 
     /**
-     * Run app
+     * Run application
+     * @throws \Exception
      */
     public function run()
     {
-        dd($this->config);
+        // TODO move route mapping outside
+        $this->router->map('get', '/[i:id]', TestHandler::class);
+        $this->router->map('get', '/', function () {
+            return 'Hello world';
+        });
+
+        $match = $this->router->match();
+
+        if (!is_array($match)) {
+            header("HTTP/1.0 404 Not Found");
+            die;
+        }
+
+        $target = $match['target'] ?? [];
+        $params = $match['params'] ?? [];
+
+        $handler = is_callable($target) ? $target : $this->container->get($target);
+        $response = $this->container->call($handler, $params);
+
+        if ($response) {
+            echo $response;
+        }
     }
 }

@@ -3,7 +3,6 @@
 // vendor autoloader
 use DI\ContainerBuilder;
 use TheApp\Factories\AppFactory;
-use TheApp\Factories\ConfigFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
 
