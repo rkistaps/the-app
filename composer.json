@@ -1,20 +1,21 @@
 {
-    "name": "rkistaps/the-app",
-    "authors": [
-        {
-            "name": "kristaps taube",
-            "email": "kristaps.taube@gmail.com"
-        }
-    ],
-    "autoload": {
-        "psr-4": {
-            "TheApp\\": "src/"
-        }
-    },
-    "require": {
-        "php": "^7.1",
-        "php-di/php-di": "^6.0",
-        "rappasoft/laravel-helpers": "^1.0",
-        "altorouter/altorouter": "^1.2"
+  "name": "rkistaps/the-app",
+  "authors": [
+    {
+      "name": "kristaps taube",
+      "email": "kristaps.taube@gmail.com"
     }
+  ],
+  "autoload": {
+    "psr-4": {
+      "TheApp\\": "src/",
+      "rkistaps\\": "app/"
+    }
+  },
+  "require": {
+    "php": "^7.1",
+    "php-di/php-di": "^6.0",
+    "rappasoft/laravel-helpers": "^1.0",
+    "altorouter/altorouter": "^1.2"
+  }
 }

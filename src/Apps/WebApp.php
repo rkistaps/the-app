@@ -4,7 +4,8 @@ namespace TheApp\Apps;
 
 use AltoRouter;
 use Psr\Container\ContainerInterface;
-use TheApp\Handlers\TestHandler;
+use TheApp\Interfaces\ConfigInterface;
+use TheApp\Interfaces\RouteConfiguratorInterface;
 
 /**
  * Class WebApp
@@ -18,17 +19,23 @@ class WebApp
     /** @var AltoRouter */
     private $router;
 
+    /** @var ConfigInterface */
+    private $config;
+
     /**
      * WebApp constructor.
      * @param AltoRouter $router
      * @param ContainerInterface $container
+     * @param ConfigInterface $config
      */
     public function __construct(
         AltoRouter $router,
-        ContainerInterface $container
+        ContainerInterface $container,
+        ConfigInterface $config
     ) {
         $this->container = $container;
         $this->router = $router;
+        $this->config = $config;
     }
 
     /**
@@ -37,11 +44,14 @@ class WebApp
      */
     public function run()
     {
-        // TODO move route mapping outside
-        $this->router->map('get', '/[i:id]', TestHandler::class);
-        $this->router->map('get', '/', function () {
-            return 'Hello world';
-        });
+        $routes = $this->config->get('routes') ?? [];
+        foreach ($routes as $routeClass) {
+            /** @var RouteConfiguratorInterface $route */
+            $route = $this->container->get($routeClass);
+            if (is_a($route, RouteConfiguratorInterface::class)) {
+                $route->configureRoutes($this->router);
+            }
+        }
 
         $match = $this->router->match();
 
