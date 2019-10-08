@@ -26,9 +26,10 @@ class TestHandler
     /**
      * Handle request
      * @param int $id
+     * @return string
      */
     public function __invoke($id)
     {
-        dd(rand(), $id, 'Invoked: ', $this->request);
+        return 'This is test handler: ' . $id;
     }
 }

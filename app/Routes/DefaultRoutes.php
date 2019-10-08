@@ -3,6 +3,7 @@
 namespace rkistaps\Routes;
 
 use AltoRouter;
+use TheApp\Handlers\TestHandler;
 use TheApp\Interfaces\RouteConfiguratorInterface;
 
 /**
@@ -22,5 +23,7 @@ class DefaultRoutes implements RouteConfiguratorInterface
         $router->map('get', '/', function () {
             return 'Hello darkness my old friend';
         });
+
+        $router->map('get', '/test/[i:id]', TestHandler::class);
     }
 }

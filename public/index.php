@@ -2,7 +2,6 @@
 
 define("APP_ROOT", realpath(__DIR__ . '/..'));
 
-// vendor autoloader
 use DI\ContainerBuilder;
 use TheApp\Factories\AppFactory;
 
