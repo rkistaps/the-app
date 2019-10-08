@@ -7,7 +7,7 @@ use TheApp\Factories\AppFactory;
 require __DIR__ . '/../vendor/autoload.php';
 
 $container = (new ContainerBuilder())
-    ->addDefinitions(require __DIR__ . '/../app/config/dependencies.php')
+    ->addDefinitions(require __DIR__ . '/../app/Config/dependencies.php')
     ->build();
 
 $app = AppFactory::fromContainer($container);
