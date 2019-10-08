@@ -63,11 +63,18 @@ class WebApp
         $target = $match['target'] ?? [];
         $params = $match['params'] ?? [];
 
-        $handler = is_callable($target) ? $target : $this->container->get($target);
-        $response = $this->container->call($handler, $params);
+        $handler = null;
+        if (is_string($target) && $this->container->has($target)) {
+            $handler = $this->container->get($target);
+        } elseif (is_callable($target)) {
+            $handler = $target;
+        }
 
-        if ($response) {
-            echo $response;
+        if ($handler) {
+            $response = $this->container->call($handler, $params);
+            if ($response) {
+                echo $response;
+            }
         }
     }
 }
