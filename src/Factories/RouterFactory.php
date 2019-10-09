@@ -13,12 +13,24 @@ use TheApp\Interfaces\RouteConfiguratorInterface;
  */
 class RouterFactory
 {
+    /** @var ContainerInterface */
+    private $container;
+
+    /**
+     * RouterFactory constructor.
+     * @param ContainerInterface $container
+     */
+    public function __construct(ContainerInterface $container)
+    {
+        $this->container = $container;
+    }
+
     /**
      * @param ContainerInterface $container
      * @param ConfigInterface $config
      * @return AltoRouter
      */
-    public function fromContainer(ContainerInterface $container, ConfigInterface $config)
+    public function fromConfig(ConfigInterface $config)
     {
         $router = new AltoRouter;
 
@@ -29,7 +41,7 @@ class RouterFactory
 
         foreach ($config->get('router.routes', []) as $routeClass) {
             /** @var RouteConfiguratorInterface $route */
-            $route = $container->get($routeClass);
+            $route = $this->container->get($routeClass);
             if (is_a($route, RouteConfiguratorInterface::class)) {
                 $route->configureRoutes($router);
             }

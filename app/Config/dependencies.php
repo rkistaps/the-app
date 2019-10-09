@@ -14,7 +14,7 @@ return [
     WebRequest::class => function (RequestFactory $requestFactory) {
         return $requestFactory->fromGlobals();
     },
-    AltoRouter::class => function (RouterFactory $routerFactory, ContainerInterface $container, ConfigInterface $config) {
-        return $routerFactory->fromContainer($container, $config);
+    AltoRouter::class => function (RouterFactory $routerFactory, ConfigInterface $config) {
+        return $routerFactory->fromConfig($config);
     },
 ];
