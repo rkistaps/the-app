@@ -44,15 +44,6 @@ class WebApp
      */
     public function run()
     {
-        $routes = $this->config->get('routes') ?? [];
-        foreach ($routes as $routeClass) {
-            /** @var RouteConfiguratorInterface $route */
-            $route = $this->container->get($routeClass);
-            if (is_a($route, RouteConfiguratorInterface::class)) {
-                $route->configureRoutes($this->router);
-            }
-        }
-
         $match = $this->router->match();
 
         if (!is_array($match)) {

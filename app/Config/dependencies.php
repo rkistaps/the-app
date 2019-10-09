@@ -1,8 +1,10 @@
 <?php
 
+use Psr\Container\ContainerInterface;
 use TheApp\Components\WebRequest;
 use TheApp\Factories\ConfigFactory;
 use TheApp\Factories\RequestFactory;
+use TheApp\Factories\RouterFactory;
 use TheApp\Interfaces\ConfigInterface;
 
 return [
@@ -11,5 +13,8 @@ return [
     },
     WebRequest::class => function (RequestFactory $requestFactory) {
         return $requestFactory->fromGlobals();
+    },
+    AltoRouter::class => function (RouterFactory $routerFactory, ContainerInterface $container, ConfigInterface $config) {
+        return $routerFactory->fromContainer($container, $config);
     },
 ];
