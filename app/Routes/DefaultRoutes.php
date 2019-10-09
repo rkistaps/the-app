@@ -4,7 +4,6 @@ namespace rkistaps\Routes;
 
 use AltoRouter;
 use TheApp\Components\WebRequest;
-use TheApp\Handlers\TestHandler;
 use TheApp\Interfaces\RouteConfiguratorInterface;
 
 /**
@@ -28,7 +27,5 @@ class DefaultRoutes implements RouteConfiguratorInterface
         $router->map('get', '/news/[a:slug]', function ($slug, WebRequest $request) {
             return 'News slug: ' . $slug . ' Test: ' . $request->get('test');
         });
-
-        $router->map('get', '/test/[i:id]', TestHandler::class);
     }
 }
