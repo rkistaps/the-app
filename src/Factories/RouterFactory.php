@@ -39,13 +39,15 @@ class RouterFactory
             $router->setBasePath($basePath);
         }
 
-        foreach ($config->get('router.routes', []) as $routeClass) {
-            /** @var RouteConfiguratorInterface $route */
-            $route = $this->container->get($routeClass);
-            if (is_a($route, RouteConfiguratorInterface::class)) {
-                $route->configureRoutes($router);
-            }
-        }
+        collect($config->get('router.routes', []))
+            ->each(function ($className) use ($router) {
+                /** @var RouteConfiguratorInterface $configurator */
+                $configurator = $this->container->get($className);
+
+                if (is_a($configurator, RouteConfiguratorInterface::class)) {
+                    $configurator->configureRoutes($router);
+                }
+            });
 
         return $router;
     }
