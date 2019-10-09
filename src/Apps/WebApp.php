@@ -4,8 +4,8 @@ namespace TheApp\Apps;
 
 use AltoRouter;
 use Psr\Container\ContainerInterface;
+use TheApp\Components\WebRequest;
 use TheApp\Interfaces\ConfigInterface;
-use TheApp\Interfaces\RouteConfiguratorInterface;
 
 /**
  * Class WebApp
@@ -22,20 +22,26 @@ class WebApp
     /** @var ConfigInterface */
     private $config;
 
+    /** @var WebRequest */
+    private $request;
+
     /**
      * WebApp constructor.
      * @param AltoRouter $router
      * @param ContainerInterface $container
      * @param ConfigInterface $config
+     * @param WebRequest $request
      */
     public function __construct(
         AltoRouter $router,
         ContainerInterface $container,
-        ConfigInterface $config
+        ConfigInterface $config,
+        WebRequest $request
     ) {
         $this->container = $container;
         $this->router = $router;
         $this->config = $config;
+        $this->request = $request;
     }
 
     /**
@@ -44,7 +50,10 @@ class WebApp
      */
     public function run()
     {
-        $match = $this->router->match();
+        $match = $this->router->match(
+            $this->request->getUri(),
+            $this->request->method
+        );
 
         if (!is_array($match)) {
             header("HTTP/1.0 404 Not Found");
