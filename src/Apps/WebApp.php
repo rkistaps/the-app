@@ -5,7 +5,6 @@ namespace TheApp\Apps;
 use AltoRouter;
 use Psr\Container\ContainerInterface;
 use TheApp\Components\WebRequest;
-use TheApp\Interfaces\ConfigInterface;
 
 /**
  * Class WebApp
@@ -19,9 +18,6 @@ class WebApp
     /** @var AltoRouter */
     private $router;
 
-    /** @var ConfigInterface */
-    private $config;
-
     /** @var WebRequest */
     private $request;
 
@@ -29,18 +25,15 @@ class WebApp
      * WebApp constructor.
      * @param AltoRouter $router
      * @param ContainerInterface $container
-     * @param ConfigInterface $config
      * @param WebRequest $request
      */
     public function __construct(
         AltoRouter $router,
         ContainerInterface $container,
-        ConfigInterface $config,
         WebRequest $request
     ) {
         $this->container = $container;
         $this->router = $router;
-        $this->config = $config;
         $this->request = $request;
     }
 
