@@ -15,7 +15,7 @@ class ConfigFactory
      * @param array $array
      * @return ArrayConfig
      */
-    public static function fromArray(array $array = []): ArrayConfig
+    public function fromArray(array $array = []): ArrayConfig
     {
         return new ArrayConfig($array);
     }
