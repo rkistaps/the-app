@@ -2,7 +2,7 @@
 
 namespace TheApp\Interfaces;
 
-use AltoRouter;
+use TheApp\Components\Router;
 
 /**
  * Interface RouteConfiguratorInterface
@@ -12,8 +12,8 @@ interface RouteConfiguratorInterface
 {
     /**
      * Map routes
-     * @param AltoRouter $router
+     * @param Router $router
      * @return void
      */
-    public function configureRoutes(AltoRouter $router);
+    public function configureRoutes(Router $router);
 }

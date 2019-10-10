@@ -2,10 +2,11 @@
 
 namespace rkistaps\Routes;
 
-use AltoRouter;
 use rkistaps\Handlers\Demo\DemoHandler;
+use TheApp\Components\Router;
 use TheApp\Components\WebRequest;
 use TheApp\Interfaces\RouteConfiguratorInterface;
+use TheApp\Responses\JsonResponse;
 
 /**
  * Class DefaultRoutes
@@ -15,11 +16,11 @@ class DefaultRoutes implements RouteConfiguratorInterface
 {
     /**
      * Map routes
-     * @param AltoRouter $router
+     * @param Router $router
      * @return void
      * @throws \Exception
      */
-    public function configureRoutes(AltoRouter $router)
+    public function configureRoutes(Router $router)
     {
         $router->map('get', '/', function () {
             return 'Hello darkness my old friend';
@@ -30,5 +31,12 @@ class DefaultRoutes implements RouteConfiguratorInterface
         });
 
         $router->map('get', '/demo', DemoHandler::class);
+
+        $router->get('/my-route', function () {
+            $class = new \stdClass();
+            $class->test = 1;
+
+            return new JsonResponse($class);
+        });
     }
 }

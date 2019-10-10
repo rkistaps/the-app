@@ -2,8 +2,8 @@
 
 namespace TheApp\Factories;
 
-use AltoRouter;
 use Psr\Container\ContainerInterface;
+use TheApp\Components\Router;
 use TheApp\Interfaces\ConfigInterface;
 use TheApp\Interfaces\RouteConfiguratorInterface;
 
@@ -26,13 +26,12 @@ class RouterFactory
     }
 
     /**
-     * @param ContainerInterface $container
      * @param ConfigInterface $config
-     * @return AltoRouter
+     * @return Router
      */
     public function fromConfig(ConfigInterface $config)
     {
-        $router = new AltoRouter;
+        $router = new Router;
 
         $basePath = $config->get('router.basePath');
         if ($basePath) {

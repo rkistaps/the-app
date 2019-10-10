@@ -2,8 +2,8 @@
 
 namespace TheApp\Apps;
 
-use AltoRouter;
 use Psr\Container\ContainerInterface;
+use TheApp\Components\Router;
 use TheApp\Components\WebRequest;
 use TheApp\Exceptions\BadHandlerResponseException;
 use TheApp\Exceptions\MissingRequestHandlerException;
@@ -22,7 +22,7 @@ class WebApp
     /** @var ContainerInterface */
     private $container;
 
-    /** @var AltoRouter */
+    /** @var Router */
     private $router;
 
     /** @var WebRequest */
@@ -30,12 +30,12 @@ class WebApp
 
     /**
      * WebApp constructor.
-     * @param AltoRouter $router
+     * @param Router $router
      * @param ContainerInterface $container
      * @param WebRequest $request
      */
     public function __construct(
-        AltoRouter $router,
+        Router $router,
         ContainerInterface $container,
         WebRequest $request
     ) {
@@ -65,6 +65,7 @@ class WebApp
             $response->respond();
         } catch (Throwable $throwable) {
             // todo get error handle, pass throwable to it..
+            dd($throwable);
         }
     }
 

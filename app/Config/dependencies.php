@@ -1,5 +1,6 @@
 <?php
 
+use TheApp\Components\Router;
 use TheApp\Components\WebRequest;
 use TheApp\Factories\ConfigFactory;
 use TheApp\Factories\RequestFactory;
@@ -13,7 +14,7 @@ return [
     WebRequest::class => function (RequestFactory $requestFactory) {
         return $requestFactory->fromGlobals();
     },
-    AltoRouter::class => function (RouterFactory $routerFactory, ConfigInterface $config) {
+    Router::class => function (RouterFactory $routerFactory, ConfigInterface $config) {
         return $routerFactory->fromConfig($config);
     },
 ];

@@ -8,8 +8,8 @@ namespace rkistaps\Handlers\Demo;
  */
 class DemoHandler
 {
-    public function __invoke($mar)
+    public function __invoke()
     {
-        return 'This is it ';
+        return 'This is it';
     }
 }
