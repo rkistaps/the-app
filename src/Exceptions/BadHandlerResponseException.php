@@ -5,10 +5,9 @@ namespace TheApp\Exceptions;
 use Exception;
 
 /**
- * Class MissingRequestHandler
+ * Class BadHandlerResponseException
  * @package TheApp\Exceptions
  */
-class MissingRequestHandler extends Exception
+class BadHandlerResponseException extends Exception
 {
-
 }

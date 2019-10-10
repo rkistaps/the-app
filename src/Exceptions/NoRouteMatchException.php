@@ -5,9 +5,9 @@ namespace TheApp\Exceptions;
 use Exception;
 
 /**
- * Class BadHandlerResponse
+ * Class NoRouteMatchException
  * @package TheApp\Exceptions
  */
-class BadHandlerResponse extends Exception
+class NoRouteMatchException extends Exception
 {
 }

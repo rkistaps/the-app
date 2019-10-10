@@ -5,8 +5,9 @@ namespace TheApp\Apps;
 use AltoRouter;
 use Psr\Container\ContainerInterface;
 use TheApp\Components\WebRequest;
-use TheApp\Exceptions\BadHandlerResponse;
-use TheApp\Exceptions\MissingRequestHandler;
+use TheApp\Exceptions\BadHandlerResponseException;
+use TheApp\Exceptions\MissingRequestHandlerException;
+use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Interfaces\ResponseInterface;
 use TheApp\Responses\SimpleResponse;
 use TheApp\Structures\RouterMatchResult;
@@ -53,25 +54,27 @@ class WebApp
             $this->request->method
         );
 
-        if ($match) {
-            $matchResult = RouterMatchResult::fromArray($match);
-            $response = $this->processMatchResult($matchResult);
-
-            $response->respond();
+        if (!$match) {
+            throw new NoRouteMatchException();
         }
+
+        $matchResult = RouterMatchResult::fromArray($match);
+        $response = $this->processMatchResult($matchResult);
+
+        $response->respond();
     }
 
     /**
      * @param RouterMatchResult $result
      * @return ResponseInterface
-     * @throws BadHandlerResponse
-     * @throws MissingRequestHandler
+     * @throws BadHandlerResponseException
+     * @throws MissingRequestHandlerException
      */
     protected function processMatchResult(RouterMatchResult $result)
     {
         $handler = $this->getMatchResultHandler($result);
         if (!$handler) {
-            throw new MissingRequestHandler();
+            throw new MissingRequestHandlerException();
         }
 
         $response = $this->container->call($handler, $result->params);
@@ -80,7 +83,7 @@ class WebApp
         }
 
         if (!is_a($response, ResponseInterface::class)) {
-            throw new BadHandlerResponse();
+            throw new BadHandlerResponseException();
         }
 
         return $response;
