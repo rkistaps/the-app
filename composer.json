@@ -17,6 +17,7 @@
     "php-di/php-di": "^6.0",
     "rappasoft/laravel-helpers": "^1.0",
     "altorouter/altorouter": "^1.2",
-    "tightenco/collect": "^5.5"
+    "tightenco/collect": "^5.5",
+    "ext-json": "*"
   }
 }

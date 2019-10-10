@@ -5,6 +5,11 @@ namespace TheApp\Apps;
 use AltoRouter;
 use Psr\Container\ContainerInterface;
 use TheApp\Components\WebRequest;
+use TheApp\Exceptions\BadHandlerResponse;
+use TheApp\Exceptions\MissingRequestHandler;
+use TheApp\Interfaces\ResponseInterface;
+use TheApp\Responses\SimpleResponse;
+use TheApp\Structures\RouterMatchResult;
 
 /**
  * Class WebApp
@@ -48,26 +53,57 @@ class WebApp
             $this->request->method
         );
 
-        if (!is_array($match)) {
-            header("HTTP/1.0 404 Not Found");
-            die;
+        if ($match) {
+            $matchResult = RouterMatchResult::fromArray($match);
+            $response = $this->processMatchResult($matchResult);
+
+            $response->respond();
+        }
+    }
+
+    /**
+     * @param RouterMatchResult $result
+     * @return ResponseInterface
+     * @throws BadHandlerResponse
+     * @throws MissingRequestHandler
+     */
+    protected function processMatchResult(RouterMatchResult $result)
+    {
+        $handler = $this->getMatchResultHandler($result);
+        if (!$handler) {
+            throw new MissingRequestHandler();
         }
 
-        $target = $match['target'] ?? [];
-        $params = $match['params'] ?? [];
-
-        $handler = null;
-        if (is_string($target) && $this->container->has($target)) {
-            $handler = $this->container->get($target);
-        } elseif (is_callable($target)) {
-            $handler = $target;
+        $response = $this->container->call($handler, $result->params);
+        if (is_string($response)) {
+            $response = new SimpleResponse($response);
         }
 
-        if ($handler) {
-            $response = $this->container->call($handler, $params);
-            if ($response) {
-                echo $response;
-            }
+        if (!is_a($response, ResponseInterface::class)) {
+            throw new BadHandlerResponse();
         }
+
+        return $response;
+    }
+
+    /**
+     * @param RouterMatchResult $matchResult
+     * @return callable|null
+     */
+    protected function getMatchResultHandler(RouterMatchResult $matchResult)
+    {
+        if (!$matchResult->target) {
+            return null;
+        }
+
+        if (is_callable($matchResult->target)) {
+            return $matchResult->target;
+        }
+
+        if (is_string($matchResult->target) && $this->container->has($matchResult->target)) {
+            return $this->container->get($matchResult->target);
+        }
+
+        return null;
     }
 }
