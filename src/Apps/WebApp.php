@@ -11,6 +11,7 @@ use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Interfaces\ResponseInterface;
 use TheApp\Responses\SimpleResponse;
 use TheApp\Structures\RouterMatchResult;
+use Throwable;
 
 /**
  * Class WebApp
@@ -45,23 +46,26 @@ class WebApp
 
     /**
      * Run application
-     * @throws \Exception
      */
     public function run()
     {
-        $match = $this->router->match(
-            $this->request->getUri(),
-            $this->request->method
-        );
+        try {
+            $match = $this->router->match(
+                $this->request->getUri(),
+                $this->request->method
+            );
 
-        if (!$match) {
-            throw new NoRouteMatchException();
+            if (!$match) {
+                throw new NoRouteMatchException();
+            }
+
+            $matchResult = RouterMatchResult::fromArray($match);
+            $response = $this->processMatchResult($matchResult);
+
+            $response->respond();
+        } catch (Throwable $throwable) {
+            // todo get error handle, pass throwable to it..
         }
-
-        $matchResult = RouterMatchResult::fromArray($match);
-        $response = $this->processMatchResult($matchResult);
-
-        $response->respond();
     }
 
     /**
