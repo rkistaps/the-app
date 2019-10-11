@@ -9,6 +9,7 @@ use TheApp\Components\WebRequest;
 use TheApp\Exceptions\BadHandlerResponseException;
 use TheApp\Exceptions\MissingRequestHandlerException;
 use TheApp\Exceptions\NoRouteMatchException;
+use TheApp\Factories\CallableFactory;
 use TheApp\Interfaces\ConfigInterface;
 use TheApp\Interfaces\ResponseInterface;
 use TheApp\Responses\SimpleResponse;
@@ -33,23 +34,29 @@ class WebApp
     /** @var ConfigInterface */
     private $config;
 
+    /** @var CallableFactory */
+    private $callableFactory;
+
     /**
      * WebApp constructor.
      * @param Router $router
      * @param ContainerInterface $container
      * @param WebRequest $request
      * @param ConfigInterface $config
+     * @param CallableFactory $callableFactory
      */
     public function __construct(
         Router $router,
         ContainerInterface $container,
         WebRequest $request,
-        ConfigInterface $config
+        ConfigInterface $config,
+        CallableFactory $callableFactory
     ) {
         $this->container = $container;
         $this->router = $router;
         $this->request = $request;
         $this->config = $config;
+        $this->callableFactory = $callableFactory;
     }
 
     /**
@@ -71,15 +78,18 @@ class WebApp
 
             $response->respond();
         } catch (Throwable $throwable) {
-            $handler = $this->config->get('errorHandler', DefaultErrorHandler::class);
-            if (is_callable($handler)) {
-                $response = $this->container->call($handler, ['throwable' => $throwable]);
-                if (is_string($response)) {
-                    $response = new SimpleResponse($response);
-                }
-
-                $response->respond();
+            $handler = $this->config->get('errorHandler');
+            $handler = $handler ? $this->callableFactory->getCallable($handler) : null;
+            if (!$handler || !is_callable($handler)) { // use default
+                $handler = $this->container->get(DefaultErrorHandler::class);
             }
+
+            $response = $this->container->call($handler, ['throwable' => $throwable]);
+            if (is_string($response)) {
+                $response = new SimpleResponse($response);
+            }
+
+            $response->respond();
         }
     }
 
