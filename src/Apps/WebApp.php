@@ -81,7 +81,7 @@ class WebApp
             $handler = $this->config->get('errorHandler');
             $handler = $handler ? $this->callableFactory->getCallable($handler) : null;
             if (!$handler || !is_callable($handler)) { // use default
-                $handler = $this->container->get(DefaultErrorHandler::class);
+                $handler = $this->callableFactory->getCallable(DefaultErrorHandler::class);
             }
 
             $response = $this->container->call($handler, ['throwable' => $throwable]);
