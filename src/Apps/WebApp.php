@@ -8,6 +8,7 @@ use TheApp\Components\WebRequest;
 use TheApp\Exceptions\BadHandlerResponseException;
 use TheApp\Exceptions\MissingRequestHandlerException;
 use TheApp\Exceptions\NoRouteMatchException;
+use TheApp\Interfaces\ConfigInterface;
 use TheApp\Interfaces\ResponseInterface;
 use TheApp\Responses\SimpleResponse;
 use TheApp\Structures\RouterMatchResult;
@@ -28,20 +29,26 @@ class WebApp
     /** @var WebRequest */
     private $request;
 
+    /** @var ConfigInterface */
+    private $config;
+
     /**
      * WebApp constructor.
      * @param Router $router
      * @param ContainerInterface $container
      * @param WebRequest $request
+     * @param ConfigInterface $config
      */
     public function __construct(
         Router $router,
         ContainerInterface $container,
-        WebRequest $request
+        WebRequest $request,
+        ConfigInterface $config
     ) {
         $this->container = $container;
         $this->router = $router;
         $this->request = $request;
+        $this->config = $config;
     }
 
     /**
@@ -64,7 +71,15 @@ class WebApp
             $response->respond();
         } catch (Throwable $throwable) {
             // todo get error handle, pass throwable to it..
-            dd($throwable);
+            $handler = $this->config->get('errorHandler');
+            if ($handler) {
+                $response = $this->container->call($handler, ['throwable' => $throwable]);
+                if (is_string($response)) {
+                    $response = new SimpleResponse($response);
+                }
+
+                $response->respond();
+            }
         }
     }
 
