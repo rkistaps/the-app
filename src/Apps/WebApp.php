@@ -3,6 +3,7 @@
 namespace TheApp\Apps;
 
 use Psr\Container\ContainerInterface;
+use TheApp\Components\DefaultErrorHandler;
 use TheApp\Components\Router;
 use TheApp\Components\WebRequest;
 use TheApp\Exceptions\BadHandlerResponseException;
@@ -70,9 +71,8 @@ class WebApp
 
             $response->respond();
         } catch (Throwable $throwable) {
-            // todo get error handle, pass throwable to it..
-            $handler = $this->config->get('errorHandler');
-            if ($handler) {
+            $handler = $this->config->get('errorHandler', DefaultErrorHandler::class);
+            if (is_callable($handler)) {
                 $response = $this->container->call($handler, ['throwable' => $throwable]);
                 if (is_string($response)) {
                     $response = new SimpleResponse($response);
