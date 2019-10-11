@@ -59,8 +59,7 @@ class WebApp
                 throw new NoRouteMatchException();
             }
 
-            $matchResult = RouterMatchResult::fromArray($match);
-            $response = $this->processMatchResult($matchResult);
+            $response = $this->processMatchResult($match);
 
             $response->respond();
         } catch (Throwable $throwable) {

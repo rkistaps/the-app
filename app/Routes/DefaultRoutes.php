@@ -14,6 +14,8 @@ use TheApp\Responses\JsonResponse;
  */
 class DefaultRoutes implements RouteConfiguratorInterface
 {
+    const NAME_MY_ROUTE = 'my-route'; 
+
     /**
      * Map routes
      * @param Router $router
@@ -37,6 +39,6 @@ class DefaultRoutes implements RouteConfiguratorInterface
             $class->test = 1;
 
             return new JsonResponse($class);
-        });
+        }, self::NAME_MY_ROUTE);
     }
 }
