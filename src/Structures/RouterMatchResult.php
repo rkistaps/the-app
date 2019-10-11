@@ -29,4 +29,13 @@ class RouterMatchResult
      * @var array
      */
     public $params = [];
+
+    /**
+     * If something matched
+     * @return bool
+     */
+    public function isMatch(): bool
+    {
+        return !!$this->target;
+    }
 }

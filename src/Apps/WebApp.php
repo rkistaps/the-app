@@ -55,7 +55,7 @@ class WebApp
                 $this->request->method
             );
 
-            if (!$match) {
+            if (!$match->isMatch()) {
                 throw new NoRouteMatchException();
             }
 

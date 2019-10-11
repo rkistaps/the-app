@@ -48,16 +48,12 @@ class Router extends AltoRouter
     /**
      * @param string|null $requestUrl
      * @param string|null $requestMethod
-     * @return RouterMatchResult|null
+     * @return RouterMatchResult
      */
     public function match($requestUrl = null, $requestMethod = null)
     {
         $result = parent::match($requestUrl, $requestMethod);
 
-        if (!$result) {
-            return null;
-        }
-
-        return RouterMatchResult::fromArray($result);
+        return RouterMatchResult::fromArray($result ?: []);
     }
 }
