@@ -27,7 +27,7 @@ class DemoHandler
      */
     public function __invoke()
     {
-        return $this->template->render('test', [
+        return $this->template->render('Demo/test', [
             'title' => 'Demo',
         ]);
     }
