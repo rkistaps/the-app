@@ -29,7 +29,17 @@ class Router extends AltoRouter
      */
     public function post($route, $name = null)
     {
-        $this->map('post', $route, $name = null);
+        $this->map('post', $route, $name);
+    }
+
+    /**
+     * @param $route
+     * @param null $name
+     * @throws Exception
+     */
+    public function any($route, $name = null)
+    {
+        $this->map('GET|POST|PATCH|PUT|DELETE', $route, $name);
     }
 
     /**
