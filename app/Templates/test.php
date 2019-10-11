@@ -7,5 +7,10 @@ use League\Plates\Template\Template;
 
 $this->layout('default');
 
-echo 'Hello: ' . $title;
-
+?>
+<h1 class="title">
+    Hello darkness my old friend
+</h1>
+<p class="subtitle">
+    My first website with <strong>Bulma</strong>!
+</p>
