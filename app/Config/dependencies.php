@@ -1,5 +1,7 @@
 <?php
 
+use League\Plates\Engine;
+use rkistaps\Factories\TemplateEngineFactory;
 use TheApp\Components\Router;
 use TheApp\Components\WebRequest;
 use TheApp\Factories\ConfigFactory;
@@ -16,5 +18,8 @@ return [
     },
     Router::class => function (RouterFactory $routerFactory, ConfigInterface $config) {
         return $routerFactory->fromConfig($config);
+    },
+    Engine::class => function (ConfigInterface $config, TemplateEngineFactory $factory) {
+        return $factory->fromConfig($config);
     },
 ];
