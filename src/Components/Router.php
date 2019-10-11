@@ -14,32 +14,35 @@ class Router extends AltoRouter
 {
     /**
      * @param string $route
+     * @param mixed $target
      * @param string|null $name
      * @throws Exception
      */
-    public function get($route, $name = null)
+    public function get($route, $target, $name = null)
     {
-        $this->map('get', $route, $name);
+        $this->map('GET', $route, $target, $name);
     }
 
     /**
-     * @param $route
+     * @param string $route
+     * @param mixed $target
      * @param null $name
      * @throws Exception
      */
-    public function post($route, $name = null)
+    public function post($route, $target, $name = null)
     {
-        $this->map('post', $route, $name);
+        $this->map('POST', $route, $target, $name);
     }
 
     /**
-     * @param $route
+     * @param string $route
+     * @param mixed $target
      * @param null $name
      * @throws Exception
      */
-    public function any($route, $name = null)
+    public function any($route, $target, $name = null)
     {
-        $this->map('GET|POST|PATCH|PUT|DELETE', $route, $name);
+        $this->map('GET|POST|PATCH|PUT|DELETE', $route, $target, $name);
     }
 
     /**
