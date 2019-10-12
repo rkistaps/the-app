@@ -2,11 +2,8 @@
 
 namespace rkistaps\Routes;
 
-use rkistaps\Handlers\Demo\DemoHandler;
 use TheApp\Components\Router;
-use TheApp\Components\WebRequest;
 use TheApp\Interfaces\RouteConfiguratorInterface;
-use TheApp\Responses\JsonResponse;
 
 /**
  * Class DefaultRoutes
@@ -14,8 +11,6 @@ use TheApp\Responses\JsonResponse;
  */
 class DefaultRoutes implements RouteConfiguratorInterface
 {
-    const NAME_MY_ROUTE = 'my-route'; 
-
     /**
      * Map routes
      * @param Router $router
@@ -27,18 +22,5 @@ class DefaultRoutes implements RouteConfiguratorInterface
         $router->map('get', '/', function () {
             return 'Hello darkness my old friend';
         });
-
-        $router->map('get', '/news/[a:slug]', function ($slug, WebRequest $request) {
-            return 'News slug: ' . $slug . ' Test: ' . $request->get('test');
-        });
-
-        $router->map('get', '/demo', DemoHandler::class);
-
-        $router->get('/my-route', function () {
-            $class = new \stdClass();
-            $class->test = 1;
-
-            return new JsonResponse($class);
-        }, self::NAME_MY_ROUTE);
     }
 }

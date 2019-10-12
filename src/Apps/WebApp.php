@@ -3,7 +3,6 @@
 namespace TheApp\Apps;
 
 use Psr\Container\ContainerInterface;
-use TheApp\Components\DefaultErrorHandler;
 use TheApp\Components\Router;
 use TheApp\Components\WebRequest;
 use TheApp\Exceptions\BadHandlerResponseException;
@@ -15,6 +14,8 @@ use TheApp\Interfaces\ResponseInterface;
 use TheApp\Responses\SimpleResponse;
 use TheApp\Structures\RouterMatchResult;
 use Throwable;
+use Whoops\Handler\PrettyPageHandler;
+use Whoops\Run;
 
 /**
  * Class WebApp
@@ -61,36 +62,50 @@ class WebApp
 
     /**
      * Run application
+     * @throws Throwable
      */
     public function run()
     {
         try {
+            $whoops = new Run;
+            $whoops->prependHandler(new PrettyPageHandler);
+            $whoops->register();
+
             $match = $this->router->match(
                 $this->request->getUri(),
                 $this->request->method
             );
 
             if (!$match->isMatch()) {
-                throw new NoRouteMatchException();
+                throw new NoRouteMatchException('No route match');
             }
 
             $response = $this->processMatchResult($match);
 
             $response->respond();
         } catch (Throwable $throwable) {
-            $handler = $this->config->get('errorHandler');
-            $handler = $handler ? $this->callableFactory->getCallable($handler) : null;
-            if (!$handler || !is_callable($handler)) { // use default
-                $handler = $this->callableFactory->getCallable(DefaultErrorHandler::class);
-            }
-
-            $response = $this->container->call($handler, ['throwable' => $throwable]);
-            if (is_string($response)) {
-                $response = new SimpleResponse($response);
-            }
-
-            $response->respond();
+            $this->handleErrors($throwable);
         }
+    }
+
+    /**
+     * @param Throwable $throwable
+     * @throws Throwable
+     */
+    protected function handleErrors(Throwable $throwable)
+    {
+        $handler = $this->config->get('errorHandler');
+        $handler = $handler ? $this->callableFactory->getCallable($handler) : null;
+        if (!$handler || !is_callable($handler)) { // no handler
+            throw  $throwable;
+        }
+
+        $response = $this->container->call($handler, ['throwable' => $throwable]);
+        if (is_string($response)) {
+            $response = new SimpleResponse($response);
+        }
+
+        $response->respond();
     }
 
     /**
@@ -103,7 +118,7 @@ class WebApp
     {
         $handler = $this->getMatchResultHandler($result);
         if (!$handler) {
-            throw new MissingRequestHandlerException();
+            throw new MissingRequestHandlerException('No handler found');
         }
 
         $response = $this->container->call($handler, $result->params);
@@ -112,7 +127,7 @@ class WebApp
         }
 
         if (!is_a($response, ResponseInterface::class)) {
-            throw new BadHandlerResponseException();
+            throw new BadHandlerResponseException('Response does not implement ' . ResponseInterface::class);
         }
 
         return $response;

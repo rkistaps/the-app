@@ -19,6 +19,6 @@
     "altorouter/altorouter": "^1.2",
     "tightenco/collect": "^5.5",
     "ext-json": "*",
-    "league/plates": "^3.3"
+    "filp/whoops": "^2.5"
   }
 }
