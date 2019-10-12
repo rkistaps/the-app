@@ -8,8 +8,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "TheApp\\": "src/",
-      "rkistaps\\": "app/"
+      "TheApp\\": "src/"
     }
   },
   "require": {
