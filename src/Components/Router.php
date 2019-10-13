@@ -13,6 +13,7 @@ use TheApp\Structures\RouterMatchResult;
 class Router extends AltoRouter
 {
     /**
+     * Map GET request
      * @param string $route
      * @param mixed $target
      * @param string|null $name
@@ -24,6 +25,7 @@ class Router extends AltoRouter
     }
 
     /**
+     * Map POST request
      * @param string $route
      * @param mixed $target
      * @param null $name
@@ -35,6 +37,43 @@ class Router extends AltoRouter
     }
 
     /**
+     * Map PATCH request
+     * @param $route
+     * @param $target
+     * @param null $name
+     * @throws Exception
+     */
+    public function patch($route, $target, $name = null)
+    {
+        $this->map('PATCH', $route, $target, $name);
+    }
+
+    /**
+     * Map PUT request
+     * @param $route
+     * @param $target
+     * @param null $name
+     * @throws Exception
+     */
+    public function put($route, $target, $name = null)
+    {
+        $this->map('PUT', $route, $target, $name);
+    }
+
+    /**
+     * Map DELETE request
+     * @param $route
+     * @param $target
+     * @param null $name
+     * @throws Exception
+     */
+    public function delete($route, $target, $name = null)
+    {
+        $this->map('delete', $route, $target, $name);
+    }
+
+    /**
+     * Map any request
      * @param string $route
      * @param mixed $target
      * @param null $name
