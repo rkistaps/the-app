@@ -9,33 +9,31 @@ use TheApp\Traits\FromArrayTrait;
  */
 class RouterMatchResult
 {
-    use FromArrayTrait;
+    /** @var Route */
+    public $route;
 
-    /**
-     * The target of the route, given during mapping the route.
-     * @var mixed
-     */
-    public $target;
-
-    /**
-     * The name of the route.
-     * @var string|null
-     */
-    public $name;
-
-
-    /**
-     * Named parameters found in the request url.
-     * @var array
-     */
+    /** @var array */
     public $params = [];
 
     /**
-     * If something matched
-     * @return bool
+     * @param Route $route
+     * @return $this
      */
-    public function isMatch(): bool
+    public function setRoute(Route $route)
     {
-        return !!$this->target;
+        $this->route = $route;
+
+        return $this;
+    }
+
+    /**
+     * @param array $params
+     * @return RouterMatchResult
+     */
+    public function setParams($params)
+    {
+        $this->params = $params;
+
+        return $this;
     }
 }

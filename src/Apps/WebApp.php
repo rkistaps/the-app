@@ -68,16 +68,13 @@ class WebApp
             // create request
             $request = ServerRequestFactory::fromGlobals();
 
-            $match = $this->router->match(
-                $request->getUri()->getPath(),
-                $request->getMethod()
-            );
+            $routeMatchResult = $this->router->match($request);
 
-            if (!$match->isMatch()) {
+            if (!$routeMatchResult) {
                 throw new NoRouteMatchException('No route match');
             }
 
-            $response = $this->processMatchResult($match);
+            $response = $this->processMatchedRoute($routeMatchResult);
 
             $response->respond();
         } catch (Throwable $throwable) {
@@ -111,7 +108,7 @@ class WebApp
      * @throws BadHandlerResponseException
      * @throws MissingRequestHandlerException
      */
-    protected function processMatchResult(RouterMatchResult $result)
+    protected function processMatchedRoute(RouterMatchResult $result)
     {
         $handler = $this->getMatchResultHandler($result);
         if (!$handler) {
@@ -136,16 +133,16 @@ class WebApp
      */
     protected function getMatchResultHandler(RouterMatchResult $matchResult)
     {
-        if (!$matchResult->target) {
+        if (!$matchResult->route->target) {
             return null;
         }
 
-        if (is_callable($matchResult->target)) {
-            return $matchResult->target;
+        if (is_callable($matchResult->route->target)) {
+            return $matchResult->route->target;
         }
 
-        if (is_string($matchResult->target) && $this->container->has($matchResult->target)) {
-            return $this->container->get($matchResult->target);
+        if (is_string($matchResult->route->target) && $this->container->has($matchResult->route->target)) {
+            return $this->container->get($matchResult->route->target);
         }
 
         return null;
