@@ -2,9 +2,9 @@
 
 namespace TheApp\Apps;
 
+use Phly\Http\ServerRequestFactory;
 use Psr\Container\ContainerInterface;
 use TheApp\Components\Router;
-use TheApp\Components\WebRequest;
 use TheApp\Exceptions\BadHandlerResponseException;
 use TheApp\Exceptions\MissingRequestHandlerException;
 use TheApp\Exceptions\NoRouteMatchException;
@@ -29,9 +29,6 @@ class WebApp
     /** @var Router */
     private $router;
 
-    /** @var WebRequest */
-    private $request;
-
     /** @var ConfigInterface */
     private $config;
 
@@ -42,20 +39,17 @@ class WebApp
      * WebApp constructor.
      * @param Router $router
      * @param ContainerInterface $container
-     * @param WebRequest $request
      * @param ConfigInterface $config
      * @param CallableFactory $callableFactory
      */
     public function __construct(
         Router $router,
         ContainerInterface $container,
-        WebRequest $request,
         ConfigInterface $config,
         CallableFactory $callableFactory
     ) {
         $this->container = $container;
         $this->router = $router;
-        $this->request = $request;
         $this->config = $config;
         $this->callableFactory = $callableFactory;
     }
@@ -71,9 +65,12 @@ class WebApp
             $whoops->prependHandler(new PrettyPageHandler);
             $whoops->register();
 
+            // create request
+            $request = ServerRequestFactory::fromGlobals();
+
             $match = $this->router->match(
-                $this->request->getUri(),
-                $this->request->method
+                $request->getUri()->getPath(),
+                $request->getMethod()
             );
 
             if (!$match->isMatch()) {
