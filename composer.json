@@ -20,6 +20,7 @@
     "filp/whoops": "^2.5",
     "psr/http-message": "^1.0",
     "phly/http": "^0.14.1",
-    "psr/http-server-middleware": "^1.0"
+    "psr/http-server-middleware": "^1.0",
+    "idealo/php-middleware-stack": "^1.0"
   }
 }

@@ -2,16 +2,20 @@
 
 namespace TheApp\Apps;
 
+use Idealo\Middleware\Stack;
+use Phly\Http\Response;
 use Phly\Http\ServerRequestFactory;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface;
+use TheApp\Components\ResponseEmitter;
 use TheApp\Components\Router;
 use TheApp\Exceptions\BadHandlerResponseException;
 use TheApp\Exceptions\MissingRequestHandlerException;
 use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Factories\CallableFactory;
 use TheApp\Interfaces\ConfigInterface;
-use TheApp\Interfaces\ResponseInterface;
 use TheApp\Responses\SimpleResponse;
+use TheApp\Structures\Route;
 use TheApp\Structures\RouterMatchResult;
 use Throwable;
 use Whoops\Handler\PrettyPageHandler;
@@ -35,23 +39,28 @@ class WebApp
     /** @var CallableFactory */
     private $callableFactory;
 
+    private $responseEmitter;
+
     /**
      * WebApp constructor.
      * @param Router $router
      * @param ContainerInterface $container
      * @param ConfigInterface $config
      * @param CallableFactory $callableFactory
+     * @param ResponseEmitter $responseEmitter
      */
     public function __construct(
         Router $router,
         ContainerInterface $container,
         ConfigInterface $config,
-        CallableFactory $callableFactory
+        CallableFactory $callableFactory,
+        ResponseEmitter $responseEmitter
     ) {
         $this->container = $container;
         $this->router = $router;
         $this->config = $config;
         $this->callableFactory = $callableFactory;
+        $this->responseEmitter = $responseEmitter;
     }
 
     /**
@@ -74,9 +83,11 @@ class WebApp
                 throw new NoRouteMatchException('No route match');
             }
 
-            $response = $this->processMatchedRoute($routeMatchResult);
+            $response = new Response();
 
-            $response->respond();
+            $response = $this->processMatchedRoute($response, $routeMatchResult);
+
+            $this->responseEmitter->emit($response);
         } catch (Throwable $throwable) {
             $this->handleErrors($throwable);
         }
@@ -103,28 +114,36 @@ class WebApp
     }
 
     /**
+     * @param ResponseInterface $response
      * @param RouterMatchResult $result
      * @return ResponseInterface
      * @throws BadHandlerResponseException
      * @throws MissingRequestHandlerException
      */
-    protected function processMatchedRoute(RouterMatchResult $result)
+    protected function processMatchedRoute(ResponseInterface $response, RouterMatchResult $result)
     {
         $handler = $this->getMatchResultHandler($result);
         if (!$handler) {
             throw new MissingRequestHandlerException('No handler found');
         }
 
-        $response = $this->container->call($handler, $result->params);
-        if (is_string($response)) {
-            $response = new SimpleResponse($response);
-        }
+        $stack = new Stack($response);
+        $response = $stack->handle(...[$response] + $result->route->middlewares);
 
         if (!is_a($response, ResponseInterface::class)) {
             throw new BadHandlerResponseException('Response does not implement ' . ResponseInterface::class);
         }
 
         return $response;
+    }
+
+    protected function buildMiddlewareStack(ResponseInterface $response, Route $route)
+    {
+        $middlewares = array_map(function ($className) {
+            return $this->container->get($className);
+        }, $route->middlewares);
+
+        return new Stack($response, $middlewares);
     }
 
     /**

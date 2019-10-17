@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "44f3e09f53fdfad7b0e620b4057c332b",
+    "content-hash": "e4d982766fb549bd8eeea21d2a1fe62f",
     "packages": [
         {
             "name": "filp/whoops",
@@ -66,6 +66,62 @@
                 "whoops"
             ],
             "time": "2019-08-07T09:00:00+00:00"
+        },
+        {
+            "name": "idealo/php-middleware-stack",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/idealo/php-middleware-stack.git",
+                "reference": "00024958a1b8a56e841edef6e358e5474f63c938"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/idealo/php-middleware-stack/zipball/00024958a1b8a56e841edef6e358e5474f63c938",
+                "reference": "00024958a1b8a56e841edef6e358e5474f63c938",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.0",
+                "psr/http-message": "^1.0",
+                "psr/http-server-handler": "^1.0",
+                "psr/http-server-middleware": "^1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Idealo\\Middleware\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache License 2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Vsevolod Dolgopolov",
+                    "email": "vsevolod.dolgopolov@idealo.de"
+                },
+                {
+                    "name": "Dirk Adler",
+                    "email": "dirk.adler@idealo.de"
+                }
+            ],
+            "description": "Implementation of HTTP Middleware PSR-15 specification",
+            "keywords": [
+                "http",
+                "middleware",
+                "psr",
+                "psr-15",
+                "psr-7",
+                "request",
+                "response",
+                "stack"
+            ],
+            "time": "2018-05-25T15:18:54+00:00"
         },
         {
             "name": "jeremeamia/superclosure",
