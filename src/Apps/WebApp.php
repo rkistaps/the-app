@@ -128,7 +128,11 @@ class WebApp
             throw new MissingRequestHandlerException('No handler found');
         }
 
-        $stack = new Stack($response, ...$result->route->middlewares);
+        $middlewares = array_map(function ($middlewareClass) {
+            return $this->container->get($middlewareClass);
+        }, $result->route->middlewares);
+
+        $stack = new Stack($response, ...$middlewares);
         $response = $stack->handle($request);
 
         if (!is_a($response, ResponseInterface::class)) {
