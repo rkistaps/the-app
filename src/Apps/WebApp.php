@@ -7,6 +7,7 @@ use Phly\Http\Response;
 use Phly\Http\ServerRequestFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TheApp\Components\ResponseEmitter;
 use TheApp\Components\Router;
 use TheApp\Exceptions\BadHandlerResponseException;
@@ -85,7 +86,7 @@ class WebApp
 
             $response = new Response();
 
-            $response = $this->processMatchedRoute($response, $routeMatchResult);
+            $response = $this->processMatchedRoute($request, $response, $routeMatchResult);
 
             $this->responseEmitter->emit($response);
         } catch (Throwable $throwable) {
@@ -120,15 +121,15 @@ class WebApp
      * @throws BadHandlerResponseException
      * @throws MissingRequestHandlerException
      */
-    protected function processMatchedRoute(ResponseInterface $response, RouterMatchResult $result)
+    protected function processMatchedRoute(ServerRequestInterface $request, ResponseInterface $response, RouterMatchResult $result)
     {
         $handler = $this->getMatchResultHandler($result);
         if (!$handler) {
             throw new MissingRequestHandlerException('No handler found');
         }
 
-        $stack = new Stack($response);
-        $response = $stack->handle(...[$response] + $result->route->middlewares);
+        $stack = new Stack($response, ...$result->route->middlewares);
+        $response = $stack->handle($request);
 
         if (!is_a($response, ResponseInterface::class)) {
             throw new BadHandlerResponseException('Response does not implement ' . ResponseInterface::class);
