@@ -10,17 +10,15 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TheApp\Components\ResponseEmitter;
 use TheApp\Components\Router;
-use TheApp\Exceptions\BadHandlerResponseException;
 use TheApp\Exceptions\MissingRequestHandlerException;
 use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Factories\CallableFactory;
 use TheApp\Interfaces\ConfigInterface;
 use TheApp\Responses\SimpleResponse;
-use TheApp\Structures\Route;
 use TheApp\Structures\RouterMatchResult;
 use Throwable;
 use Whoops\Handler\PrettyPageHandler;
-use Whoops\Run;
+use Whoops\RunInterface;
 
 /**
  * Class WebApp
@@ -40,7 +38,11 @@ class WebApp
     /** @var CallableFactory */
     private $callableFactory;
 
+    /** @var ResponseEmitter */
     private $responseEmitter;
+
+    /** @var RunInterface */
+    private $run;
 
     /**
      * WebApp constructor.
@@ -49,19 +51,22 @@ class WebApp
      * @param ConfigInterface $config
      * @param CallableFactory $callableFactory
      * @param ResponseEmitter $responseEmitter
+     * @param RunInterface $run
      */
     public function __construct(
         Router $router,
         ContainerInterface $container,
         ConfigInterface $config,
         CallableFactory $callableFactory,
-        ResponseEmitter $responseEmitter
+        ResponseEmitter $responseEmitter,
+        RunInterface $run
     ) {
         $this->container = $container;
         $this->router = $router;
         $this->config = $config;
         $this->callableFactory = $callableFactory;
         $this->responseEmitter = $responseEmitter;
+        $this->run = $run;
     }
 
     /**
@@ -71,9 +76,8 @@ class WebApp
     public function run()
     {
         try {
-            $whoops = new Run;
-            $whoops->prependHandler(new PrettyPageHandler);
-            $whoops->register();
+            $this->run->pushHandler(new PrettyPageHandler());
+            $this->run->register();
 
             // create request
             $request = ServerRequestFactory::fromGlobals();
@@ -84,9 +88,7 @@ class WebApp
                 throw new NoRouteMatchException('No route match');
             }
 
-            $response = new Response();
-
-            $response = $this->processMatchedRoute($request, $response, $routeMatchResult);
+            $response = $this->processMatchedRoute($request, $routeMatchResult);
 
             $this->responseEmitter->emit($response);
         } catch (Throwable $throwable) {
@@ -103,7 +105,7 @@ class WebApp
         $handler = $this->config->get('errorHandler');
         $handler = $handler ? $this->callableFactory->getCallable($handler) : null;
         if (!$handler || !is_callable($handler)) { // no handler
-            throw  $throwable;
+            throw $throwable;
         }
 
         $response = $this->container->call($handler, ['throwable' => $throwable]);
@@ -115,40 +117,27 @@ class WebApp
     }
 
     /**
-     * @param ResponseInterface $response
+     * @param ServerRequestInterface $request
      * @param RouterMatchResult $result
      * @return ResponseInterface
-     * @throws BadHandlerResponseException
      * @throws MissingRequestHandlerException
      */
-    protected function processMatchedRoute(ServerRequestInterface $request, ResponseInterface $response, RouterMatchResult $result)
+    protected function processMatchedRoute(ServerRequestInterface $request, RouterMatchResult $result): ResponseInterface
     {
+        $response = new Response();
+
         $handler = $this->getMatchResultHandler($result);
         if (!$handler) {
             throw new MissingRequestHandlerException('No handler found');
         }
 
-        $middlewares = array_map(function ($middlewareClass) {
-            return $this->container->get($middlewareClass);
-        }, $result->route->middlewares);
+        $response = $handle->
 
-        $stack = new Stack($response, ...$middlewares);
+
+        $stack = new Stack($response, ...$result->route->middlewares);
         $response = $stack->handle($request);
 
-        if (!is_a($response, ResponseInterface::class)) {
-            throw new BadHandlerResponseException('Response does not implement ' . ResponseInterface::class);
-        }
-
         return $response;
-    }
-
-    protected function buildMiddlewareStack(ResponseInterface $response, Route $route)
-    {
-        $middlewares = array_map(function ($className) {
-            return $this->container->get($className);
-        }, $route->middlewares);
-
-        return new Stack($response, $middlewares);
     }
 
     /**

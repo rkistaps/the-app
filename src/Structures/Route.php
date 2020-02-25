@@ -25,15 +25,15 @@ class Route
     /** @var string|null */
     public $name;
 
-    /** @var mixed[] */
+    /** @var MiddlewareInterface[] */
     public $middlewares = [];
 
     /**
      * Add middleware
-     * @param mixed $middleware
+     * @param MiddlewareInterface $middleware
      * @return $this
      */
-    public function with($middleware)
+    public function with(MiddlewareInterface $middleware)
     {
         $this->middlewares[] = $middleware;
 

@@ -146,7 +146,7 @@ class Router
      */
     public function delete($path, $target, $name = null)
     {
-        return $this->map('delete', $path, $target, $name);
+        return $this->map('DELETE', $path, $target, $name);
     }
 
     /**
