@@ -2,97 +2,135 @@
 
 namespace TheApp\Components;
 
-use AltoRouter;
 use Exception;
-use TheApp\Structures\RouterMatchResult;
+use Psr\Http\Message\RequestInterface;
+use TheApp\Factories\RouteFactory;
+use TheApp\Structures\Route;
 
 /**
  * Class Router
  * @package TheApp\Components
  */
-class Router extends AltoRouter
+class Router
 {
+    private RouteFactory $routeFactory;
+    private array $routes = [];
+
+    public function __construct(
+        RouteFactory $routeFactory
+    ) {
+        $this->routeFactory = $routeFactory;
+    }
+
     /**
-     * Map GET request
-     * @param string $route
-     * @param mixed $target
+     * Add route for GET request
+     * @param string $path
+     * @param string|callable $target
      * @param string|null $name
-     * @throws Exception
+     * @return Route
      */
-    public function get($route, $target, $name = null)
+    public function get(string $path, $target, string $name = null): Route
     {
-        $this->map('GET', $route, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_GET, $path, $target, $name);
+
+        $this->addRoute($route);
+
+        return $route;
+    }
+
+    public function addRoute(Route $route)
+    {
+        $this->routes[] = $route;
+
+        return $this;
     }
 
     /**
-     * Map POST request
-     * @param string $route
-     * @param mixed $target
-     * @param null $name
-     * @throws Exception
+     * Add route for POST request
+     * @param string $path
+     * @param string|callable $target
+     * @param string $name
+     * @return Route
      */
-    public function post($route, $target, $name = null)
+    public function post(string $path, $target, string $name = null): Route
     {
-        $this->map('POST', $route, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_GET, $path, $target, $name);
+
+        $this->addRoute($route);
+
+        return $route;
     }
 
     /**
-     * Map PATCH request
-     * @param $route
-     * @param $target
-     * @param null $name
-     * @throws Exception
+     * Add route for PUT request
+     * @param string $path
+     * @param string|callable $target
+     * @param string $name
+     * @return Route
      */
-    public function patch($route, $target, $name = null)
+    public function put(string $path, $target, string $name = null): Route
     {
-        $this->map('PATCH', $route, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_PUT, $path, $target, $name);
+
+        $this->addRoute($route);
+
+        return $route;
     }
 
     /**
-     * Map PUT request
-     * @param $route
-     * @param $target
-     * @param null $name
-     * @throws Exception
+     * Add route for PATCH request
+     * @param string $path
+     * @param string|callable $target
+     * @param string $name
+     * @return Route
      */
-    public function put($route, $target, $name = null)
+    public function patch(string $path, $target, string $name = null): Route
     {
-        $this->map('PUT', $route, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_PATCH, $path, $target, $name);
+
+        $this->addRoute($route);
+
+        return $route;
     }
 
     /**
-     * Map DELETE request
-     * @param $route
-     * @param $target
-     * @param null $name
-     * @throws Exception
+     * Add route for DELETE request
+     * @param string $path
+     * @param string|callable $target
+     * @param string $name
+     * @return Route
      */
-    public function delete($route, $target, $name = null)
+    public function delete(string $path, $target, string $name = null): Route
     {
-        $this->map('delete', $route, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_DELETE, $path, $target, $name);
+
+        $this->addRoute($route);
+
+        return $route;
     }
 
     /**
-     * Map any request
-     * @param string $route
-     * @param mixed $target
-     * @param null $name
-     * @throws Exception
+     * Add route for any type of request
+     * @param string $path
+     * @param string|callable $target
+     * @param string $name
+     * @return Route
      */
-    public function any($route, $target, $name = null)
+    public function any(string $path, $target, string $name = null): Route
     {
-        $this->map('GET|POST|PATCH|PUT|DELETE', $route, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_ANY, $path, $target, $name);
+
+        $this->addRoute($route);
+
+        return $route;
     }
 
     /**
-     * @param string|null $requestUrl
-     * @param string|null $requestMethod
-     * @return RouterMatchResult
+     * @param RequestInterface $request
+     * @return array|bool
      */
-    public function match($requestUrl = null, $requestMethod = null)
+    public function process(RequestInterface $request)
     {
-        $result = parent::match($requestUrl, $requestMethod);
-
-        return RouterMatchResult::fromArray($result ?: []);
+        return parent::match($request->getUri()->getPath(), $request->getMethod());
     }
 }

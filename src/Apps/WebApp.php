@@ -5,14 +5,11 @@ namespace TheApp\Apps;
 use Phly\Http\ServerRequestFactory;
 use Psr\Container\ContainerInterface;
 use TheApp\Components\Router;
-use TheApp\Exceptions\BadHandlerResponseException;
-use TheApp\Exceptions\MissingRequestHandlerException;
 use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Factories\CallableFactory;
+use TheApp\Factories\RequestHandlerFactory;
 use TheApp\Interfaces\ConfigInterface;
-use TheApp\Interfaces\ResponseInterface;
 use TheApp\Responses\SimpleResponse;
-use TheApp\Structures\RouterMatchResult;
 use Throwable;
 use Whoops\Handler\PrettyPageHandler;
 use Whoops\Run;
@@ -23,35 +20,24 @@ use Whoops\Run;
  */
 class WebApp
 {
-    /** @var ContainerInterface */
-    private $container;
+    private ContainerInterface $container;
+    private Router $router;
+    private ConfigInterface $config;
+    private CallableFactory $callableFactory;
+    private RequestHandlerFactory $handlerFactory;
 
-    /** @var Router */
-    private $router;
-
-    /** @var ConfigInterface */
-    private $config;
-
-    /** @var CallableFactory */
-    private $callableFactory;
-
-    /**
-     * WebApp constructor.
-     * @param Router $router
-     * @param ContainerInterface $container
-     * @param ConfigInterface $config
-     * @param CallableFactory $callableFactory
-     */
     public function __construct(
         Router $router,
         ContainerInterface $container,
         ConfigInterface $config,
-        CallableFactory $callableFactory
+        CallableFactory $callableFactory,
+        RequestHandlerFactory $handlerFactory
     ) {
         $this->container = $container;
         $this->router = $router;
         $this->config = $config;
         $this->callableFactory = $callableFactory;
+        $this->handlerFactory = $handlerFactory;
     }
 
     /**
@@ -61,23 +47,23 @@ class WebApp
     public function run()
     {
         try {
-            $whoops = new Run;
-            $whoops->prependHandler(new PrettyPageHandler);
+            $whoops = new Run();
+            $whoops->prependHandler(new PrettyPageHandler());
             $whoops->register();
 
             // create request
             $request = ServerRequestFactory::fromGlobals();
 
-            $match = $this->router->match(
-                $request->getUri()->getPath(),
-                $request->getMethod()
-            );
-
-            if (!$match->isMatch()) {
+            $handlerClass = $this->router->process($request);
+            if (!$handlerClass) {
                 throw new NoRouteMatchException('No route match');
             }
 
-            $response = $this->processMatchResult($match);
+            if (is_string($handlerClass)) {
+                $handler = $this->handlerFactory->getHandlerInstance($handlerClass);
+
+                $response = $handler->handle($request);
+            }
 
             $response->respond();
         } catch (Throwable $throwable) {
@@ -103,51 +89,5 @@ class WebApp
         }
 
         $response->respond();
-    }
-
-    /**
-     * @param RouterMatchResult $result
-     * @return ResponseInterface
-     * @throws BadHandlerResponseException
-     * @throws MissingRequestHandlerException
-     */
-    protected function processMatchResult(RouterMatchResult $result)
-    {
-        $handler = $this->getMatchResultHandler($result);
-        if (!$handler) {
-            throw new MissingRequestHandlerException('No handler found');
-        }
-
-        $response = $this->container->call($handler, $result->params);
-        if (is_string($response)) {
-            $response = new SimpleResponse($response);
-        }
-
-        if (!is_a($response, ResponseInterface::class)) {
-            throw new BadHandlerResponseException('Response does not implement ' . ResponseInterface::class);
-        }
-
-        return $response;
-    }
-
-    /**
-     * @param RouterMatchResult $matchResult
-     * @return callable|null
-     */
-    protected function getMatchResultHandler(RouterMatchResult $matchResult)
-    {
-        if (!$matchResult->target) {
-            return null;
-        }
-
-        if (is_callable($matchResult->target)) {
-            return $matchResult->target;
-        }
-
-        if (is_string($matchResult->target) && $this->container->has($matchResult->target)) {
-            return $this->container->get($matchResult->target);
-        }
-
-        return null;
     }
 }

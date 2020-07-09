@@ -31,7 +31,7 @@ class RouterFactory
      */
     public function fromConfig(ConfigInterface $config)
     {
-        $router = new Router;
+        $router = new Router();
 
         $basePath = $config->get('router.basePath');
         if ($basePath) {

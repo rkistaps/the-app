@@ -20,6 +20,7 @@
     "ext-json": "*",
     "filp/whoops": "^2.5",
     "psr/http-message": "^1.0",
-    "phly/http": "^0.14.1"
+    "phly/http": "^0.14.1",
+    "psr/http-server-handler": "^1.0"
   }
 }
