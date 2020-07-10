@@ -54,7 +54,7 @@ class WebApp
             // create request
             $request = ServerRequestFactory::fromGlobals();
 
-            $handlerClass = $this->router->process($request);
+            $handlerClass = $this->router->processRequest($request);
             if (!$handlerClass) {
                 throw new NoRouteMatchException('No route match');
             }

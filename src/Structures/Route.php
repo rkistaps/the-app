@@ -17,11 +17,15 @@ class Route
     /** @var string|callable */
     public $target;
 
-    public array $middlewares = [];
+    /** @var string[] */
+    public array $middlewareClassnames = [];
 
-    public function withMiddleware($middleware) {
-        $this->middlewares[] = $middleware;
+    public function withMiddleware(string $middlewareClassname): Route
+    {
+        $route = clone $this;
 
-        return $this;
+        $route->middlewareClassnames[] = $middlewareClassname;
+
+        return $route;
     }
 }
