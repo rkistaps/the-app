@@ -16,8 +16,12 @@ class Router
     private RouteFactory $routeFactory;
     /** @var Route[] */
     private array $routes = [];
-
     private string $basePath = '';
+    protected array $matchTypes = [
+        '[i]' => '[0-9]+',
+        '[s]' => '[a-zA-Z\-]+',
+        '[*]' => '[a-zA-Z0-9\-]+',
+    ];
 
     public function __construct(
         RouteFactory $routeFactory
@@ -74,13 +78,13 @@ class Router
     /**
      * Add route for GET request
      * @param string $path
-     * @param string|callable $target
+     * @param string|callable $handler
      * @param string|null $name
      * @return Route
      */
-    public function get(string $path, $target, string $name = null): Route
+    public function get(string $path, $handler, string $name = null): Route
     {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_GET, $path, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_GET, $path, $handler, $name);
 
         $this->addRoute($route);
 
@@ -97,13 +101,13 @@ class Router
     /**
      * Add route for POST request
      * @param string $path
-     * @param string|callable $target
+     * @param string|callable $handler
      * @param string $name
      * @return Route
      */
-    public function post(string $path, $target, string $name = null): Route
+    public function post(string $path, $handler, string $name = null): Route
     {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_GET, $path, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_POST, $path, $handler, $name);
 
         $this->addRoute($route);
 
@@ -113,13 +117,13 @@ class Router
     /**
      * Add route for PUT request
      * @param string $path
-     * @param string|callable $target
+     * @param string|callable $handler
      * @param string $name
      * @return Route
      */
-    public function put(string $path, $target, string $name = null): Route
+    public function put(string $path, $handler, string $name = null): Route
     {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_PUT, $path, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_PUT, $path, $handler, $name);
 
         $this->addRoute($route);
 
@@ -129,13 +133,13 @@ class Router
     /**
      * Add route for PATCH request
      * @param string $path
-     * @param string|callable $target
+     * @param string|callable $handler
      * @param string $name
      * @return Route
      */
-    public function patch(string $path, $target, string $name = null): Route
+    public function patch(string $path, $handler, string $name = null): Route
     {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_PATCH, $path, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_PATCH, $path, $handler, $name);
 
         $this->addRoute($route);
 
@@ -145,13 +149,13 @@ class Router
     /**
      * Add route for DELETE request
      * @param string $path
-     * @param string|callable $target
+     * @param string|callable $handler
      * @param string $name
      * @return Route
      */
-    public function delete(string $path, $target, string $name = null): Route
+    public function delete(string $path, $handler, string $name = null): Route
     {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_DELETE, $path, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_DELETE, $path, $handler, $name);
 
         $this->addRoute($route);
 
@@ -161,111 +165,52 @@ class Router
     /**
      * Add route for any type of request
      * @param string $path
-     * @param string|callable $target
+     * @param string|callable $handler
      * @param string $name
      * @return Route
      */
-    public function any(string $path, $target, string $name = null): Route
+    public function any(string $path, $handler, string $name = null): Route
     {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_ANY, $path, $target, $name);
+        $route = $this->routeFactory->buildRoute(Route::METHOD_ANY, $path, $handler, $name);
 
         $this->addRoute($route);
 
         return $route;
     }
 
-    /**
-     * @param RequestInterface $request
-     * @return ResponseInterface
-     */
-    public function processRequest(RequestInterface $request): ResponseInterface
+    public function findRouteForRequest(RequestInterface $request): ?Route
     {
-        $params = [];
-
-        // strip base path from request url
         $requestUrl = substr($request->getUri()->getPath(), strlen($this->basePath));
 
-        // Strip query string (?a=b) from Request Url
-        if (($strpos = strpos($requestUrl, '?')) !== false) {
-            $requestUrl = substr($requestUrl, 0, $strpos);
-        }
+        /** @var Route[] $routes */
+        $routes = collect($this->routes)
+            ->filter(function (Route $route) use ($request) {
+                return $route->isAnyMethod() || $request->getMethod() === $route->method;
+            })
+            ->all();
 
-        // set Request Method if it isn't passed as a parameter
-        if ($requestMethod === null) {
-            $requestMethod = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
-        }
-
-        foreach ($this->routes as $handler) {
-            [$method, $_route, $target, $name] = $handler;
-
-            $methods = explode('|', $method);
-            $method_match = false;
-
-            // Check if request method matches. If not, abandon early. (CHEAP)
-            foreach ($methods as $method) {
-                if (strcasecmp($requestMethod, $method) === 0) {
-                    $method_match = true;
-                    break;
-                }
+        foreach ($routes as $route) {
+            if ($route->isForAnyPath()) {
+                return $route;
             }
 
-            // Method did not match, continue to next route.
-            if (!$method_match) {
-                continue;
-            }
-
-            // Check for a wildcard (matches all)
-            if ($_route === '*') {
-                $match = true;
-            } elseif (isset($_route[0]) && $_route[0] === '@') {
-                $pattern = '`' . substr($_route, 1) . '`u';
-                $match = preg_match($pattern, $requestUrl, $params);
-            } else {
-                $route = null;
-                $regex = false;
-                $j = 0;
-                $n = isset($_route[0]) ? $_route[0] : null;
-                $i = 0;
-
-                // Find the longest non-regex substring and match it against the URI
-                while (true) {
-                    if (!isset($_route[$i])) {
-                        break;
-                    } elseif (false === $regex) {
-                        $c = $n;
-                        $regex = $c === '[' || $c === '(' || $c === '.';
-                        if (false === $regex && false !== isset($_route[$i + 1])) {
-                            $n = $_route[$i + 1];
-                            $regex = $n === '?' || $n === '+' || $n === '*' || $n === '{';
-                        }
-                        if (false === $regex && $c !== '/' && (!isset($requestUrl[$j]) || $c !== $requestUrl[$j])) {
-                            continue 2;
-                        }
-                        $j++;
-                    }
-                    $route .= $_route[$i++];
-                }
-
-                $regex = $this->compileRoute($route);
-                $match = preg_match($regex, $requestUrl, $params);
-            }
-
-            if (($match == true || $match > 0)) {
-                if ($params) {
-                    foreach ($params as $key => $value) {
-                        if (is_numeric($key)) {
-                            unset($params[$key]);
-                        }
-                    }
-                }
-
-                return [
-                    'target' => $target,
-                    'params' => $params,
-                    'name' => $name,
-                ];
+            $regex = $this->buildRegexForRoute($route);
+            preg_match('/' . $regex . '/', $requestUrl, $match);
+            if ($match) {
+                return $route;
             }
         }
-        return false;
+
+        return null;
+    }
+
+    protected function buildRegexForRoute(Route $route): string
+    {
+        $regex = $route->path;
+        foreach ($this->matchTypes as $search => $replace) {
+            $regex = str_replace($search, $replace, $regex);
+        }
+
+        return '^' . str_replace('/', '\/', $regex) . '$';
     }
 }

@@ -9,23 +9,36 @@ class Route
     public const METHOD_DELETE = 'DELETE';
     public const METHOD_PATCH = 'PATCH';
     public const METHOD_PUT = 'PUT';
-    public const METHOD_ANY = 'GET|POST|PATCH|PUT|DELETE';
+    public const METHOD_ANY = 'ANY';
 
     public string $path;
-    public string $method;
-    public string $name;
+    public string $method = self::METHOD_ANY;
+    public ?string $name;
     /** @var string|callable */
-    public $target;
+    public $handler;
 
     /** @var string[] */
     public array $middlewareClassnames = [];
 
     public function withMiddleware(string $middlewareClassname): Route
     {
-        $route = clone $this;
+        $this->middlewareClassnames[] = $middlewareClassname;
 
-        $route->middlewareClassnames[] = $middlewareClassname;
+        return $this;
+    }
 
-        return $route;
+    public function isAnyMethod(): bool
+    {
+        return $this->method === self::METHOD_ANY;
+    }
+
+    public function isForAnyPath(): bool
+    {
+        return $this->path === '*';
+    }
+
+    public function isCustomPath(): bool
+    {
+        return ($this->path[0] ?? null) === '@';
     }
 }

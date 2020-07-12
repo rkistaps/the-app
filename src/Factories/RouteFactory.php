@@ -6,12 +6,12 @@ use TheApp\Structures\Route;
 
 class RouteFactory
 {
-    public function buildRoute(string $method, string $path, $target, string $name = null): Route
+    public function buildRoute(string $method, string $path, $handler, string $name = null): Route
     {
         $route = new Route();
         $route->method = $method;
         $route->path = $path;
-        $route->target = $target;
+        $route->handler = $handler;
         $route->name = $name;
 
         return $route;

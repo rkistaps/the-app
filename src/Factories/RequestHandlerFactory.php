@@ -2,16 +2,17 @@
 
 namespace TheApp\Factories;
 
-use Psr\Container\ContainerInterface;
+use DI\Container;
 use Psr\Http\Server\RequestHandlerInterface;
+use TheApp\Components\CallableRequestHandler;
 use TheApp\Exceptions\InvalidConfigException;
 
 class RequestHandlerFactory
 {
-    private ContainerInterface $container;
+    private Container $container;
 
     public function __construct(
-        ContainerInterface $container
+        Container $container
     ) {
         $this->container = $container;
     }
@@ -30,5 +31,14 @@ class RequestHandlerFactory
         }
 
         return $instance;
+    }
+
+    /**
+     * @param callable $callable
+     * @return RequestHandlerInterface
+     */
+    public function getCallableRequestHandler($callable): RequestHandlerInterface
+    {
+        return new CallableRequestHandler($callable, $this->container);
     }
 }
