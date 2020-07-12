@@ -10,8 +10,7 @@ use Psr\Container\ContainerInterface;
  */
 class CallableFactory
 {
-    /** @var ContainerInterface */
-    private $container;
+    private ContainerInterface $container;
 
     /**
      * CallableFactory constructor.

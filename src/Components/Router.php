@@ -2,8 +2,7 @@
 
 namespace TheApp\Components;
 
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TheApp\Factories\RouteFactory;
 use TheApp\Structures\Route;
 
@@ -178,7 +177,7 @@ class Router
         return $route;
     }
 
-    public function findRouteForRequest(RequestInterface $request): ?Route
+    public function findRouteForRequest(ServerRequestInterface $request): ?Route
     {
         $requestUrl = substr($request->getUri()->getPath(), strlen($this->basePath));
 

@@ -2,9 +2,9 @@
 
 namespace TheApp\Apps;
 
-use Jasny\HttpMessage\ServerRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TheApp\Components\Router;
 use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Factories\ErrorHandlerFactory;
@@ -42,11 +42,11 @@ class WebApp
 
     /**
      * Run application
-     * @param ServerRequest $request
+     * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Throwable
      */
-    public function run(ServerRequest $request): ResponseInterface
+    public function run(ServerRequestInterface $request): ResponseInterface
     {
         try {
             $this->bootstrapApp();

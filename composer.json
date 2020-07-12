@@ -15,9 +15,7 @@
       "php": "^7.4",
       "php-di/php-di": "^6.0",
       "rappasoft/laravel-helpers": "^1.0",
-      "altorouter/altorouter": "^1.2",
       "tightenco/collect": "^5.5",
-      "ext-json": "*",
       "filp/whoops": "^2.5",
       "psr/http-message": "^1.0",
       "psr/http-server-handler": "^1.0",
@@ -25,4 +23,3 @@
       "jasny/http-message": "^1.3"
     }
   }
-  
