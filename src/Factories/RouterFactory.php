@@ -5,48 +5,36 @@ namespace TheApp\Factories;
 use Psr\Container\ContainerInterface;
 use TheApp\Components\Router;
 use TheApp\Interfaces\ConfigInterface;
-use TheApp\Interfaces\RouteConfiguratorInterface;
+use TheApp\Interfaces\RouterConfiguratorInterface;
 
-/**
- * Class RouterFactory
- * @package TheApp\Factories
- */
 class RouterFactory
 {
-    /** @var ContainerInterface */
-    private $container;
+    private ContainerInterface $container;
 
-    /**
-     * RouterFactory constructor.
-     * @param ContainerInterface $container
-     */
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
     }
 
-    /**
-     * @param ConfigInterface $config
-     * @return Router
-     */
-    public function fromConfig(ConfigInterface $config)
+    public function buildFromConfig(ConfigInterface $config): Router
     {
-        $router = new Router;
+        $router = new Router(
+            $this->container->get(RouteFactory::class)
+        );
 
         $basePath = $config->get('router.basePath');
         if ($basePath) {
-            $router->setBasePath($basePath);
+            $router->withBasePath($basePath);
         }
 
-        collect($config->get('router.routes', []))
-            ->each(function ($className) use ($router) {
-                /** @var RouteConfiguratorInterface $configurator */
-                $configurator = $this->container->get($className);
+        $routerConfigurators = $config->get('router.configurators', []);
+        foreach ($routerConfigurators as $configuratorClassname) {
+            $configurator = $this->container->get($configuratorClassname);
 
-                if (is_a($configurator, RouteConfiguratorInterface::class)) {
-                    $configurator->configureRoutes($router);
-                }
-            });
+            if (is_a($configurator, RouterConfiguratorInterface::class)) {
+                $configurator->configureRouter($router);
+            }
+        }
 
         return $router;
     }

@@ -2,17 +2,14 @@
 
 namespace TheApp\Apps;
 
-use Phly\Http\ServerRequestFactory;
+use Jasny\HttpMessage\ServerRequest;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface;
 use TheApp\Components\Router;
-use TheApp\Exceptions\BadHandlerResponseException;
-use TheApp\Exceptions\MissingRequestHandlerException;
 use TheApp\Exceptions\NoRouteMatchException;
-use TheApp\Factories\CallableFactory;
+use TheApp\Factories\ErrorHandlerFactory;
+use TheApp\Factories\MiddlewareStackFactory;
 use TheApp\Interfaces\ConfigInterface;
-use TheApp\Interfaces\ResponseInterface;
-use TheApp\Responses\SimpleResponse;
-use TheApp\Structures\RouterMatchResult;
 use Throwable;
 use Whoops\Handler\PrettyPageHandler;
 use Whoops\Run;
@@ -23,131 +20,70 @@ use Whoops\Run;
  */
 class WebApp
 {
-    /** @var ContainerInterface */
-    private $container;
+    private ContainerInterface $container;
+    private Router $router;
+    private MiddlewareStackFactory $stackFactory;
+    private ErrorHandlerFactory $errorHandlerFactory;
+    private ConfigInterface $config;
 
-    /** @var Router */
-    private $router;
-
-    /** @var ConfigInterface */
-    private $config;
-
-    /** @var CallableFactory */
-    private $callableFactory;
-
-    /**
-     * WebApp constructor.
-     * @param Router $router
-     * @param ContainerInterface $container
-     * @param ConfigInterface $config
-     * @param CallableFactory $callableFactory
-     */
     public function __construct(
         Router $router,
         ContainerInterface $container,
-        ConfigInterface $config,
-        CallableFactory $callableFactory
+        MiddlewareStackFactory $stackFactory,
+        ErrorHandlerFactory $errorHandlerFactory,
+        ConfigInterface $config
     ) {
         $this->container = $container;
         $this->router = $router;
+        $this->stackFactory = $stackFactory;
+        $this->errorHandlerFactory = $errorHandlerFactory;
         $this->config = $config;
-        $this->callableFactory = $callableFactory;
     }
 
     /**
      * Run application
+     * @param ServerRequest $request
+     * @return ResponseInterface
      * @throws Throwable
      */
-    public function run()
+    public function run(ServerRequest $request): ResponseInterface
     {
         try {
-            $whoops = new Run;
-            $whoops->prependHandler(new PrettyPageHandler);
-            $whoops->register();
+            $this->bootstrapApp();
 
-            // create request
-            $request = ServerRequestFactory::fromGlobals();
-
-            $match = $this->router->match(
-                $request->getUri()->getPath(),
-                $request->getMethod()
-            );
-
-            if (!$match->isMatch()) {
+            $route = $this->router->findRouteForRequest($request);
+            if (!$route) {
                 throw new NoRouteMatchException('No route match');
             }
 
-            $response = $this->processMatchResult($match);
-
-            $response->respond();
+            $stack = $this->stackFactory->buildFromRoute($route);
+            $response = $stack->handle($request);
         } catch (Throwable $throwable) {
-            $this->handleErrors($throwable);
-        }
-    }
-
-    /**
-     * @param Throwable $throwable
-     * @throws Throwable
-     */
-    protected function handleErrors(Throwable $throwable)
-    {
-        $handler = $this->config->get('errorHandler');
-        $handler = $handler ? $this->callableFactory->getCallable($handler) : null;
-        if (!$handler || !is_callable($handler)) { // no handler
-            throw  $throwable;
-        }
-
-        $response = $this->container->call($handler, ['throwable' => $throwable]);
-        if (is_string($response)) {
-            $response = new SimpleResponse($response);
-        }
-
-        $response->respond();
-    }
-
-    /**
-     * @param RouterMatchResult $result
-     * @return ResponseInterface
-     * @throws BadHandlerResponseException
-     * @throws MissingRequestHandlerException
-     */
-    protected function processMatchResult(RouterMatchResult $result)
-    {
-        $handler = $this->getMatchResultHandler($result);
-        if (!$handler) {
-            throw new MissingRequestHandlerException('No handler found');
-        }
-
-        $response = $this->container->call($handler, $result->params);
-        if (is_string($response)) {
-            $response = new SimpleResponse($response);
-        }
-
-        if (!is_a($response, ResponseInterface::class)) {
-            throw new BadHandlerResponseException('Response does not implement ' . ResponseInterface::class);
+            $response = $this->handleErrors($throwable);
         }
 
         return $response;
     }
 
-    /**
-     * @param RouterMatchResult $matchResult
-     * @return callable|null
-     */
-    protected function getMatchResultHandler(RouterMatchResult $matchResult)
+    protected function bootstrapApp()
     {
-        if (!$matchResult->target) {
-            return null;
+        $whoops = new Run();
+        $whoops->prependHandler(new PrettyPageHandler());
+        $whoops->register();
+    }
+
+    /**
+     * @param Throwable $throwable
+     * @return ResponseInterface
+     * @throws Throwable
+     */
+    protected function handleErrors(Throwable $throwable): ResponseInterface
+    {
+        $handler = $this->errorHandlerFactory->buildFromConfig($this->config);
+        if ($handler) {
+            return $handler->handle($throwable);
         }
 
-        if (is_callable($matchResult->target)) {
-            return $matchResult->target;
-        }
-
-        if (is_string($matchResult->target) && $this->container->has($matchResult->target)) {
-            return $this->container->get($matchResult->target);
-        }
-
-        return null;
+        throw $throwable;
     }
 }

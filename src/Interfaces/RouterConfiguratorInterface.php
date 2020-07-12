@@ -5,15 +5,15 @@ namespace TheApp\Interfaces;
 use TheApp\Components\Router;
 
 /**
- * Interface RouteConfiguratorInterface
+ * Interface RouterConfiguratorInterface
  * @package TheApp\Interfaces
  */
-interface RouteConfiguratorInterface
+interface RouterConfiguratorInterface
 {
     /**
      * Map routes
      * @param Router $router
      * @return void
      */
-    public function configureRoutes(Router $router);
+    public function configureRouter(Router $router);
 }

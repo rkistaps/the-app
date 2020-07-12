@@ -16,7 +16,7 @@ class AppFactory
      * @param ContainerInterface $container
      * @return WebApp
      */
-    public static function fromContainer(ContainerInterface $container)
+    public static function fromContainer(ContainerInterface $container): WebApp
     {
         return $container->get(WebApp::class);
     }
