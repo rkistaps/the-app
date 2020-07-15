@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "be3bcfb2b63873eeec2bef74425cb546",
+    "content-hash": "0e4bd8d1609edb92cf2c2890162b8d3a",
     "packages": [
         {
             "name": "filp/whoops",
@@ -767,6 +767,54 @@
             "time": "2019-04-03T13:15:59+00:00"
         },
         {
+            "name": "samejack/php-argv",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/samejack/php-argv.git",
+                "reference": "d23fccbb837bcc9560435ba090411bb95ad5b6e4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/samejack/php-argv/zipball/d23fccbb837bcc9560435ba090411bb95ad5b6e4",
+                "reference": "d23fccbb837bcc9560435ba090411bb95ad5b6e4",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "php-coveralls/php-coveralls": "*@stable",
+                "phpunit/phpunit": "~4.8|~5.7",
+                "squizlabs/php_codesniffer": "*@stable"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "samejack\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "SJ",
+                    "email": "sj@toright.com",
+                    "homepage": "http://blog.toright.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "PHP CLI arguments parse.",
+            "homepage": "https://github.com/samejack/php-argv",
+            "keywords": [
+                "cli",
+                "php"
+            ],
+            "time": "2020-03-30T08:46:31+00:00"
+        },
+        {
             "name": "symfony/polyfill-mbstring",
             "version": "v1.12.0",
             "source": {
@@ -1060,8 +1108,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.4",
-        "ext-json": "*"
+        "php": "^7.4"
     },
     "platform-dev": []
 }

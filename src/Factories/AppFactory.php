@@ -3,6 +3,7 @@
 namespace TheApp\Factories;
 
 use Psr\Container\ContainerInterface;
+use TheApp\Apps\ConsoleApp;
 use TheApp\Apps\WebApp;
 
 /**
@@ -11,13 +12,13 @@ use TheApp\Apps\WebApp;
  */
 class AppFactory
 {
-    /**
-     * Build App from container
-     * @param ContainerInterface $container
-     * @return WebApp
-     */
-    public static function fromContainer(ContainerInterface $container): WebApp
+    public static function webAppFromContainer(ContainerInterface $container): WebApp
     {
         return $container->get(WebApp::class);
+    }
+
+    public static function consoleAppFromContainer(ContainerInterface $container): ConsoleApp
+    {
+        return $container->get(ConsoleApp::class);
     }
 }
