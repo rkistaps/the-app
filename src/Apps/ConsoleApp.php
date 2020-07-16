@@ -23,15 +23,15 @@ class ConsoleApp
      */
     public function run($argv)
     {
-        $result = $this->argvParser->parseConfigs($argv);
-        $commandName = $result['command'] ?? null;
+        $params = $this->argvParser->parseConfigs($argv);
+        $commandName = $params['command'] ?? null;
         $command = $this->commandRunner->findCommandByName($commandName);
         if (!$command) {
             echo 'Command not found' . PHP_EOL;
         }
 
-        unset($result['command']);
+        unset($params['command']);
 
-        $this->commandRunner->runCommand($command, $result);
+        $this->commandRunner->runCommand($command, $params);
     }
 }
