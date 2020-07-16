@@ -21,6 +21,6 @@ class CallableCommandHandler implements CommandHandlerInterface
 
     public function handle(array $params = [])
     {
-        $this->container->call($this->callable, ['params' => $params]);
+        $this->container->call($this->callable, $params);
     }
 }
