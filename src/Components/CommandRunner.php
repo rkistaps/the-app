@@ -1,12 +1,9 @@
 <?php
 
-
 namespace TheApp\Components;
-
 
 use Psr\Container\ContainerInterface;
 use TheApp\Factories\CommandHandlerFactory;
-use TheApp\Interfaces\CommandHandlerInterface;
 use TheApp\Structures\Command;
 
 class CommandRunner

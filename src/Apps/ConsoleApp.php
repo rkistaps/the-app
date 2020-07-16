@@ -28,6 +28,7 @@ class ConsoleApp
         $command = $this->commandRunner->findCommandByName($commandName);
         if (!$command) {
             echo 'Command not found' . PHP_EOL;
+            return;
         }
 
         unset($params['command']);

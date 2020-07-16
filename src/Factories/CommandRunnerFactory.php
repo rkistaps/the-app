@@ -19,7 +19,10 @@ class CommandRunnerFactory
 
     public function fromConfig(ConfigInterface $config): CommandRunner
     {
-        $runner = new CommandRunner();
+        $runner = new CommandRunner(
+            $this->container,
+            $this->container->get(CommandHandlerFactory::class)
+        );
 
         $routerConfigurators = $config->get('command.configurators', []);
         foreach ($routerConfigurators as $configuratorClassname) {
