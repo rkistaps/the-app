@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0e4bd8d1609edb92cf2c2890162b8d3a",
+    "content-hash": "627327968f24bbb3d38a4268db6152e7",
     "packages": [
         {
             "name": "filp/whoops",
@@ -768,16 +768,16 @@
         },
         {
             "name": "samejack/php-argv",
-            "version": "1.0.2",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/samejack/php-argv.git",
-                "reference": "d23fccbb837bcc9560435ba090411bb95ad5b6e4"
+                "reference": "0551f0f7fd38a5e9dcb316d5cc9028cdd62b21ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/samejack/php-argv/zipball/d23fccbb837bcc9560435ba090411bb95ad5b6e4",
-                "reference": "d23fccbb837bcc9560435ba090411bb95ad5b6e4",
+                "url": "https://api.github.com/repos/samejack/php-argv/zipball/0551f0f7fd38a5e9dcb316d5cc9028cdd62b21ac",
+                "reference": "0551f0f7fd38a5e9dcb316d5cc9028cdd62b21ac",
                 "shasum": ""
             },
             "require": {
@@ -812,7 +812,7 @@
                 "cli",
                 "php"
             ],
-            "time": "2020-03-30T08:46:31+00:00"
+            "time": "2020-07-15T12:28:03+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
@@ -1104,7 +1104,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "samejack/php-argv": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
