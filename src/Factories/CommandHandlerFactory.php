@@ -2,6 +2,7 @@
 
 namespace TheApp\Factories;
 
+use DI\Container;
 use Psr\Container\ContainerInterface;
 use TheApp\Components\CallableCommandHandler;
 use TheApp\Exceptions\InvalidConfigException;
@@ -12,7 +13,7 @@ class CommandHandlerFactory
 {
     private ContainerInterface $container;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(Container $container)
     {
         $this->container = $container;
     }
@@ -20,7 +21,7 @@ class CommandHandlerFactory
     public function fromCommand(Command $command): CommandHandlerInterface
     {
         $handler = is_callable($command->handler)
-            ? new CallableCommandHandler($command->handler)
+            ? new CallableCommandHandler($command->handler, $this->container)
             : $this->container->get($command->handler);
 
         if (!is_a($handler, CommandHandlerInterface::class)) {
