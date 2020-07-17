@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "627327968f24bbb3d38a4268db6152e7",
+    "content-hash": "0e4bd8d1609edb92cf2c2890162b8d3a",
     "packages": [
         {
             "name": "filp/whoops",
@@ -768,7 +768,7 @@
         },
         {
             "name": "samejack/php-argv",
-            "version": "dev-master",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/samejack/php-argv.git",
@@ -1104,9 +1104,7 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "samejack/php-argv": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
