@@ -1052,26 +1052,26 @@
         },
         {
             "name": "tightenco/collect",
-            "version": "v5.5.48",
+            "version": "v5.8.38",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tightenco/collect.git",
-                "reference": "79e6bbf22da0e685c8122030374e5db953750b3b"
+                "reference": "c93a7039e6207ad533a09109838fe80933fcc72c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tightenco/collect/zipball/79e6bbf22da0e685c8122030374e5db953750b3b",
-                "reference": "79e6bbf22da0e685c8122030374e5db953750b3b",
+                "url": "https://api.github.com/repos/tightenco/collect/zipball/c93a7039e6207ad533a09109838fe80933fcc72c",
+                "reference": "c93a7039e6207ad533a09109838fe80933fcc72c",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.0",
-                "symfony/var-dumper": "~3.3"
+                "php": "^7.1.3",
+                "symfony/var-dumper": ">=3.4 <5"
             },
             "require-dev": {
-                "mockery/mockery": "~1.0",
+                "mockery/mockery": "^1.0",
                 "nesbot/carbon": "^1.26.3",
-                "phpunit/phpunit": "~6.0"
+                "phpunit/phpunit": "^7.0"
             },
             "type": "library",
             "autoload": {
@@ -1098,7 +1098,7 @@
                 "collection",
                 "laravel"
             ],
-            "time": "2019-07-10T19:10:41+00:00"
+            "time": "2019-09-17T18:57:01+00:00"
         }
     ],
     "packages-dev": [],
