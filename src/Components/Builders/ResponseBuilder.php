@@ -29,7 +29,7 @@ class ResponseBuilder
      */
     public function withHeader(string $key, $value): ResponseBuilder
     {
-        $this->response = $this->response->withAddedHeader($key, $value);
+        $this->response = $this->response->withHeader($key, $value);
 
         return $this;
     }
