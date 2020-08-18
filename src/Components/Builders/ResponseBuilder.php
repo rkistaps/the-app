@@ -7,11 +7,31 @@ use Psr\Http\Message\ResponseInterface;
 
 class ResponseBuilder
 {
-    private ResponseInterface $response;
+    protected ResponseInterface $response;
 
     public function __construct()
     {
         $this->response = new Response();
+    }
+
+    public function withRedirect(string $location, int $statusCode = 301): ResponseBuilder
+    {
+        $this->withStatus($statusCode);
+        $this->withHeader('location', $location);
+
+        return $this;
+    }
+
+    /**
+     * @param string $key
+     * @param string|string[] $value
+     * @return ResponseBuilder
+     */
+    public function withHeader(string $key, $value): ResponseBuilder
+    {
+        $this->response = $this->response->withAddedHeader($key, $value);
+
+        return $this;
     }
 
     public function withStatus(int $statusCode): ResponseBuilder
