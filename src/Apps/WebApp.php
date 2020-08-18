@@ -26,6 +26,8 @@ class WebApp
     private ErrorHandlerFactory $errorHandlerFactory;
     private ConfigInterface $config;
 
+    private static ContainerInterface $staticContainer;
+
     public function __construct(
         Router $router,
         ContainerInterface $container,
@@ -38,6 +40,13 @@ class WebApp
         $this->stackFactory = $stackFactory;
         $this->errorHandlerFactory = $errorHandlerFactory;
         $this->config = $config;
+
+        self::$staticContainer = $container;
+    }
+
+    public static function getContainer(): ContainerInterface
+    {
+        return self::$staticContainer;
     }
 
     /**
