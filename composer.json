@@ -1,26 +1,25 @@
 {
-    "name": "rkistaps/the-app",
-    "authors": [
-      {
-        "name": "kristaps taube",
-        "email": "kristaps.taube@gmail.com"
-      }
-    ],
-    "autoload": {
-      "psr-4": {
-        "TheApp\\": "src/"
-      }
-    },
-    "require": {
-      "php": "^7.4",
-      "php-di/php-di": "^6.0",
-      "rappasoft/laravel-helpers": "^1.0",
-      "tightenco/collect": "^5.5",
-      "filp/whoops": "^2.5",
-      "psr/http-message": "^1.0",
-      "psr/http-server-handler": "^1.0",
-      "psr/http-server-middleware": "^1.0",
-      "jasny/http-message": "^1.3",
-        "samejack/php-argv": "^1.0"
+  "name": "rkistaps/the-app",
+  "authors": [
+    {
+      "name": "kristaps taube",
+      "email": "kristaps.taube@gmail.com"
     }
+  ],
+  "autoload": {
+    "psr-4": {
+      "TheApp\\": "src/"
+    }
+  },
+  "require": {
+    "php": "^7.4",
+    "php-di/php-di": "^6.0",
+    "rappasoft/laravel-helpers": "^1.0",
+    "filp/whoops": "^2.5",
+    "psr/http-message": "^1.0",
+    "psr/http-server-handler": "^1.0",
+    "psr/http-server-middleware": "^1.0",
+    "jasny/http-message": "^1.3",
+    "samejack/php-argv": "^1.0"
   }
+}
