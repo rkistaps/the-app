@@ -2,30 +2,33 @@
 
 namespace TheApp\Components;
 
+use DI\Container;
 use Psr\Http\Message\ServerRequestInterface;
-use TheApp\Factories\RouteFactory;
+use Psr\Http\Server\RequestHandlerInterface;
+use TheApp\Exceptions\InvalidConfigException;
+use TheApp\Exceptions\NoRouteMatchException;
+use TheApp\Interfaces\RouteHandlerInterface;
+use TheApp\Interfaces\RouteRepositoryInterface;
+use TheApp\Interfaces\RouterInterface;
 use TheApp\Structures\Route;
 
 /**
  * Class Router
  * @package TheApp\Components
  */
-class Router
+class Router implements RouterInterface
 {
-    private RouteFactory $routeFactory;
-    /** @var Route[] */
-    private array $routes = [];
+    private RouteRepositoryInterface $repository;
+    private Container $container;
+
     private string $basePath = '';
-    protected array $matchTypes = [
-        '[i]' => '[0-9]+',
-        '[s]' => '[a-zA-Z\-]+',
-        '[*]' => '[a-zA-Z0-9\-]+',
-    ];
 
     public function __construct(
-        RouteFactory $routeFactory
+        RouteRepositoryInterface $repository,
+        Container $container
     ) {
-        $this->routeFactory = $routeFactory;
+        $this->repository = $repository;
+        $this->container = $container;
     }
 
     public function withBasePath(string $basePath): Router
@@ -36,44 +39,37 @@ class Router
         return $router;
     }
 
-    public function generateRoutePath(string $routeName, array $params = []): string
+    /**
+     * @param ServerRequestInterface $request
+     * @return RouteHandlerInterface
+     * @throws NoRouteMatchException|InvalidConfigException
+     */
+    public function getRouteHandler(ServerRequestInterface $request): RouteHandlerInterface
     {
-        $route = $this->findRouteByName($routeName);
+        $route = $this->repository->findRouteByRequest($request);
         if (!$route) {
-            throw new \Exception("Route '" . $routeName . "' does not exist.");
+            throw new NoRouteMatchException('No route match');
         }
 
-        // prepend base path to route url again
-        $url = $this->basePath . $route->path;
-
-        if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER)) {
-            foreach ($matches as $match) {
-                [$block, $pre, $type, $param, $optional] = $match;
-
-                if ($pre) {
-                    $block = substr($block, 1);
-                }
-
-                if (isset($params[$param])) {
-                    $url = str_replace($block, $params[$param], $url);
-                } elseif ($optional) {
-                    $url = str_replace($pre . $block, '', $url);
-                }
-            }
-        }
-
-        return $url;
+        return $this->initializeRoute($route);
     }
 
-    public function findRouteByName(string $name): ?Route
+    protected function initializeRoute(Route $route): RouteHandlerInterface
     {
-        foreach ($this->routes as $route) {
-            if ($route->name === $name) {
-                return $route;
-            }
+        $handler = is_callable($route->handler)
+            ? new CallableRequestHandler($route->handler, $this->container)
+            : $this->container->get($route->handler);
+
+        if (!is_a($handler, RequestHandlerInterface::class)) {
+            throw new InvalidConfigException(get_class($handler) . ' does not implement ' . RequestHandlerInterface::class);
         }
 
-        return null;
+        $handler = new RouteHandler($handler);
+        $handler->addMiddlewares(array_map(function (string $middlewareClassName) {
+            return $this->container->get($middlewareClassName);
+        }, $route->middlewareClassnames));
+
+        return $handler;
     }
 
     /**
@@ -85,80 +81,25 @@ class Router
      */
     public function get(string $path, $handler, string $name = null): Route
     {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_GET, $path, $handler, $name);
+        $route = $this->buildRoute(Route::METHOD_GET, $this->basePath . $path, $handler, $name);
 
-        $this->addRoute($route);
+        $this->repository->addRoute($route);
 
         return $route;
-    }
-
-    public function addRoute(Route $route)
-    {
-        $this->routes[] = $route;
-
-        return $this;
     }
 
     /**
      * Add route for POST request
      * @param string $path
      * @param string|callable $handler
-     * @param string $name
+     * @param string|null $name
      * @return Route
      */
     public function post(string $path, $handler, string $name = null): Route
     {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_POST, $path, $handler, $name);
+        $route = $this->buildRoute(Route::METHOD_POST, $this->basePath . $path, $handler, $name);
 
-        $this->addRoute($route);
-
-        return $route;
-    }
-
-    /**
-     * Add route for PUT request
-     * @param string $path
-     * @param string|callable $handler
-     * @param string $name
-     * @return Route
-     */
-    public function put(string $path, $handler, string $name = null): Route
-    {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_PUT, $path, $handler, $name);
-
-        $this->addRoute($route);
-
-        return $route;
-    }
-
-    /**
-     * Add route for PATCH request
-     * @param string $path
-     * @param string|callable $handler
-     * @param string $name
-     * @return Route
-     */
-    public function patch(string $path, $handler, string $name = null): Route
-    {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_PATCH, $path, $handler, $name);
-
-        $this->addRoute($route);
-
-        return $route;
-    }
-
-    /**
-     * Add route for DELETE request
-     * @param string $path
-     * @param string|callable $handler
-     * @param string $name
-     * @return Route
-     */
-    public function delete(string $path, $handler, string $name = null): Route
-    {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_DELETE, $path, $handler, $name);
-
-        $this->addRoute($route);
+        $this->repository->addRoute($route);
 
         return $route;
     }
@@ -167,47 +108,26 @@ class Router
      * Add route for any type of request
      * @param string $path
      * @param string|callable $handler
-     * @param string $name
+     * @param string|null $name
      * @return Route
      */
     public function any(string $path, $handler, string $name = null): Route
     {
-        $route = $this->routeFactory->buildRoute(Route::METHOD_ANY, $path, $handler, $name);
+        $route = $this->buildRoute(Route::METHOD_ANY, $path, $handler, $name);
 
-        $this->addRoute($route);
+        $this->repository->addRoute($route);
 
         return $route;
     }
 
-    public function findRouteForRequest(ServerRequestInterface $request): ?Route
+    public function buildRoute(string $method, string $path, $handler, string $name = null): Route
     {
-        $requestUrl = substr($request->getUri()->getPath(), strlen($this->basePath));
+        $route = new Route();
+        $route->method = $method;
+        $route->path = $path;
+        $route->handler = $handler;
+        $route->name = $name;
 
-        /** @var Route[] $routes */
-        $routes = array_filter($this->routes, fn(Route $route) => $route->isAnyMethod() || $request->getMethod() === $route->method);
-
-        foreach ($routes as $route) {
-            if ($route->isForAnyPath()) {
-                return $route;
-            }
-
-            $regex = $this->buildRegexForRoute($route);
-            preg_match('/' . $regex . '/', $requestUrl, $match);
-            if ($match) {
-                return $route;
-            }
-        }
-
-        return null;
-    }
-
-    protected function buildRegexForRoute(Route $route): string
-    {
-        $regex = $route->path;
-        foreach ($this->matchTypes as $search => $replace) {
-            $regex = str_replace($search, $replace, $regex);
-        }
-
-        return '^' . str_replace('/', '\/', $regex) . '$';
+        return $route;
     }
 }

@@ -7,6 +7,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TheApp\Components\MiddlewareStack;
 use TheApp\Exceptions\InvalidConfigException;
+use TheApp\Interfaces\RouteHandlerInterface;
 use TheApp\Structures\Route;
 
 class MiddlewareStackFactory
@@ -20,6 +21,14 @@ class MiddlewareStackFactory
     ) {
         $this->container = $container;
         $this->requestHandlerFactory = $requestHandlerFactory;
+    }
+
+    public function buildFromRouteHandler(RouteHandlerInterface $routeHandler): MiddlewareStack
+    {
+        return new MiddlewareStack(
+            $routeHandler->getHandler(),
+            ...$routeHandler->getMiddlewares()
+        );
     }
 
     /**
