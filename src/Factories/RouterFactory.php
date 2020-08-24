@@ -6,6 +6,7 @@ use Psr\Container\ContainerInterface;
 use TheApp\Components\Router;
 use TheApp\Interfaces\ConfigInterface;
 use TheApp\Interfaces\RouterConfiguratorInterface;
+use TheApp\Interfaces\RouterInterface;
 
 class RouterFactory
 {
@@ -16,11 +17,9 @@ class RouterFactory
         $this->container = $container;
     }
 
-    public function buildFromConfig(ConfigInterface $config): Router
+    public function buildFromConfig(ConfigInterface $config): RouterInterface
     {
-        $router = new Router(
-            $this->container->get(RouteFactory::class)
-        );
+        $router = $this->container->get(Router::class);
 
         $basePath = $config->get('router.basePath');
         if ($basePath) {
