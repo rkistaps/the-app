@@ -29,17 +29,15 @@ class MiddlewareStackFactory
      */
     public function buildFromRoute(Route $route): MiddlewareStack
     {
-        $middlewares = collect($route->middlewareClassnames)
-            ->map(function ($classname) {
-                $middleware = $this->container->get($classname);
+        $middlewares = array_map(function (string $classname) {
+            $middleware = $this->container->get($classname);
 
-                if (!is_a($middleware, MiddlewareInterface::class)) {
-                    throw new InvalidConfigException(get_class($middleware) . ' does not implement ' . MiddlewareInterface::class);
-                }
+            if (!is_a($middleware, MiddlewareInterface::class)) {
+                throw new InvalidConfigException(get_class($middleware) . ' does not implement ' . MiddlewareInterface::class);
+            }
 
-                return $middleware;
-            })
-            ->all();
+            return $middleware;
+        }, $route->middlewareClassnames);
 
         $handler = is_callable($route->handler)
             ? $this->requestHandlerFactory->getCallableRequestHandler($route->handler)

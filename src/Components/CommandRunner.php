@@ -35,9 +35,13 @@ class CommandRunner
 
     public function findCommandByName(string $name): ?Command
     {
-        return collect($this->commands)->first(function (Command $command) use ($name) {
-            return $name === $command->name;
-        });
+        foreach ($this->commands as $command) {
+            if ($command->name === $name) {
+                return $command;
+            }
+        }
+
+        return null;
     }
 
     public function runCommand(Command $command, array $params = [])

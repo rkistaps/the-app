@@ -22,7 +22,7 @@ class ResponseBuilder
         return $this;
     }
 
-    /**
+    /**c
      * @param string $key
      * @param string|string[] $value
      * @return ResponseBuilder

@@ -67,11 +67,13 @@ class Router
 
     public function findRouteByName(string $name): ?Route
     {
-        return collect($this->routes)->first(
-            function (Route $route) use ($name) {
-                return $route->name === $name;
+        foreach ($this->routes as $route) {
+            if ($route->name === $name) {
+                return $route;
             }
-        );
+        }
+
+        return null;
     }
 
     /**
@@ -182,11 +184,7 @@ class Router
         $requestUrl = substr($request->getUri()->getPath(), strlen($this->basePath));
 
         /** @var Route[] $routes */
-        $routes = collect($this->routes)
-            ->filter(function (Route $route) use ($request) {
-                return $route->isAnyMethod() || $request->getMethod() === $route->method;
-            })
-            ->all();
+        $routes = array_filter($this->routes, fn(Route $route) => $route->isAnyMethod() || $request->getMethod() === $route->method);
 
         foreach ($routes as $route) {
             if ($route->isForAnyPath()) {
