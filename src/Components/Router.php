@@ -65,7 +65,7 @@ class Router implements RouterInterface
         }
 
         $handler = new RouteHandler($handler);
-        $handler->addMiddlewares(array_map(function (string $middlewareClassName) {
+        $handler->addMiddlewares(...array_map(function (string $middlewareClassName) {
             return $this->container->get($middlewareClassName);
         }, $route->middlewareClassnames));
 
