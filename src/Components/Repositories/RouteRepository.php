@@ -3,9 +3,10 @@
 namespace TheApp\Components\Repositories;
 
 use Psr\Http\Message\ServerRequestInterface;
+use TheApp\Interfaces\RouteRepositoryInterface;
 use TheApp\Structures\Route;
 
-class RouteRepository
+class RouteRepository implements RouteRepositoryInterface
 {
     /** @var Route[] */
     private array $routes = [];
