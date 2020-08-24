@@ -5,11 +5,10 @@ namespace TheApp\Apps;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TheApp\Components\Router;
-use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Factories\ErrorHandlerFactory;
 use TheApp\Factories\MiddlewareStackFactory;
 use TheApp\Interfaces\ConfigInterface;
+use TheApp\Interfaces\RouterInterface;
 use Throwable;
 use Whoops\Handler\PrettyPageHandler;
 use Whoops\Run;
@@ -21,7 +20,7 @@ use Whoops\Run;
 class WebApp
 {
     private ContainerInterface $container;
-    private Router $router;
+    private RouterInterface $router;
     private MiddlewareStackFactory $stackFactory;
     private ErrorHandlerFactory $errorHandlerFactory;
     private ConfigInterface $config;
@@ -29,7 +28,7 @@ class WebApp
     private static ContainerInterface $staticContainer;
 
     public function __construct(
-        Router $router,
+        RouterInterface $router,
         ContainerInterface $container,
         MiddlewareStackFactory $stackFactory,
         ErrorHandlerFactory $errorHandlerFactory,
@@ -60,12 +59,8 @@ class WebApp
         try {
             $this->bootstrapApp();
 
-            $route = $this->router->findRouteForRequest($request);
-            if (!$route) {
-                throw new NoRouteMatchException('No route match');
-            }
-
-            $stack = $this->stackFactory->buildFromRoute($route);
+            $handler = $this->router->getRouteHandler($request);
+            $stack = $this->stackFactory->buildFromRouteHandler($handler);
             $response = $stack->handle($request);
         } catch (Throwable $throwable) {
             $response = $this->handleErrors($throwable);
