@@ -5,10 +5,10 @@ namespace TheApp\Components;
 use DI\Container;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use TheApp\Components\Repositories\RouteRepository;
 use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Interfaces\RouteHandlerInterface;
-use TheApp\Interfaces\RouteRepositoryInterface;
 use TheApp\Interfaces\RouterInterface;
 use TheApp\Structures\Route;
 
@@ -18,13 +18,13 @@ use TheApp\Structures\Route;
  */
 class Router implements RouterInterface
 {
-    private RouteRepositoryInterface $repository;
+    private RouteRepository $repository;
     private Container $container;
 
     private string $basePath = '';
 
     public function __construct(
-        RouteRepositoryInterface $repository,
+        RouteRepository $repository,
         Container $container
     ) {
         $this->repository = $repository;
