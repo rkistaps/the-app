@@ -34,7 +34,7 @@ class Router implements RouterInterface
     public function withBasePath(string $basePath): Router
     {
         $router = clone $this;
-        $router->basePath = $basePath;
+        $router->basePath = $basePathdd;
 
         return $router;
     }
