@@ -47,12 +47,12 @@ class Router implements RouterInterface
      */
     public function getRouteHandler(ServerRequestInterface $request): RouteHandlerInterface
     {
-        $route = $this->repository->matchRoute($request);
-        if (!$route) {
+        $matchResult = $this->repository->matchRoute($request);
+        if (!$matchResult) {
             throw new NoRouteMatchException('No route match');
         }
 
-        return $this->initializeRoute($route);
+        return $this->initializeRoute($matchResult);
     }
 
     protected function initializeRoute(RouteMatchResult $matchResult): RouteHandlerInterface

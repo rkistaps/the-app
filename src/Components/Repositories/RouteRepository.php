@@ -27,25 +27,6 @@ class RouteRepository
         return $this;
     }
 
-    public function findRouteByRequest(ServerRequestInterface $request): ?Route
-    {
-        $routes = array_filter($this->routes, fn(Route $route) => $route->isAnyMethod() || $request->getMethod() === $route->method);
-
-        foreach ($routes as $route) {
-            if ($route->isForAnyPath()) {
-                return $route;
-            }
-
-            $regex = $this->buildRegexForRoute($route);
-            preg_match('/' . $regex . '/', $request->getUri()->getPath(), $match);
-            if ($match) {
-                return $route;
-            }
-        }
-
-        return null;
-    }
-
     public function matchRoute(ServerRequestInterface $request): ?RouteMatchResult
     {
         $parameters = [];
@@ -128,15 +109,5 @@ class RouteRepository
             }
         }
         return "`^$routePath$`u";
-    }
-
-    protected function buildRegexForRoute(Route $route): string
-    {
-        $regex = $route->path;
-        foreach ($this->matchTypes as $search => $replace) {
-            $regex = str_replace($search, $replace, $regex);
-        }
-
-        return '^' . str_replace('/', '\/', $regex) . '$';
     }
 }
