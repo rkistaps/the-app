@@ -11,6 +11,7 @@ use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Interfaces\RouteHandlerInterface;
 use TheApp\Interfaces\RouterInterface;
 use TheApp\Structures\Route;
+use TheApp\Structures\RouteMatchResult;
 
 /**
  * Class Router
@@ -46,16 +47,18 @@ class Router implements RouterInterface
      */
     public function getRouteHandler(ServerRequestInterface $request): RouteHandlerInterface
     {
-        $route = $this->repository->findRouteByRequest($request);
-        if (!$route) {
+        $matchResult = $this->repository->matchRoute($request);
+        if (!$matchResult) {
             throw new NoRouteMatchException('No route match');
         }
 
-        return $this->initializeRoute($route);
+        return $this->initializeRoute($matchResult);
     }
 
-    protected function initializeRoute(Route $route): RouteHandlerInterface
+    protected function initializeRoute(RouteMatchResult $matchResult): RouteHandlerInterface
     {
+        $route = $matchResult->getRoute();
+
         $handler = is_callable($route->handler)
             ? new CallableRequestHandler($route->handler, $this->container)
             : $this->container->get($route->handler);
@@ -68,6 +71,10 @@ class Router implements RouterInterface
         $handler->addMiddlewares(...array_map(function (string $middlewareClassName) {
             return $this->container->get($middlewareClassName);
         }, $route->middlewareClassnames));
+
+        foreach ($matchResult->getParameters() as $name => $value) {
+            $handler->addAttribute($name, $value);
+        }
 
         return $handler;
     }

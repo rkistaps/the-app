@@ -61,6 +61,11 @@ class WebApp
 
             $handler = $this->router->getRouteHandler($request);
             $stack = $this->stackFactory->buildFromRouteHandler($handler);
+
+            foreach ($handler->getAttributes() as $name => $value) {
+                $request = $request->withAttribute($name, $value);
+            }
+
             $response = $stack->handle($request);
         } catch (Throwable $throwable) {
             $response = $this->handleErrors($throwable);

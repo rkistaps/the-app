@@ -13,4 +13,11 @@ interface RouteHandlerInterface
      * @return MiddlewareInterface[]
      */
     public function getMiddlewares(): array;
+
+    /**
+     * Retrieve attributes derived from the request
+     *
+     * @return array
+     */
+    public function getAttributes(): array;
 }
