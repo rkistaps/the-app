@@ -13,6 +13,12 @@ class RouteHandler implements RouteHandlerInterface
     /** @var MiddlewareInterface[] */
     private array $middlewares = [];
 
+    /**
+     * Attributes derived from the request
+     * @var array
+     */
+    private array $attributes = [];
+
     public function __construct(RequestHandlerInterface $handler)
     {
         $this->handler = $handler;
@@ -31,5 +37,15 @@ class RouteHandler implements RouteHandlerInterface
     public function addMiddlewares(MiddlewareInterface ...$middlewares)
     {
         $this->middlewares = $middlewares;
+    }
+
+    public function addAttribute(string $name, $value)
+    {
+        $this->attributes[$name] = $value;
+    }
+
+    public function getAttributes(): array
+    {
+        return $this->attributes;
     }
 }

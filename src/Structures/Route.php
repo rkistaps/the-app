@@ -38,4 +38,9 @@ class Route
     {
         return ($this->path[0] ?? null) === '@';
     }
+
+    public function hasParameters(): bool
+    {
+
+    }
 }
