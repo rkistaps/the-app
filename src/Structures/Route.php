@@ -41,6 +41,6 @@ class Route
 
     public function hasParameters(): bool
     {
-
+        return strpos($this->path, '[') !== false;
     }
 }
