@@ -2,18 +2,22 @@
 
 namespace TheApp\Apps;
 
+use Psr\Container\ContainerInterface;
 use samejack\PHP\ArgvParser;
 use TheApp\Components\CommandRunner;
 
-class ConsoleApp
+class ConsoleApp extends App
 {
     private CommandRunner $commandRunner;
     private ArgvParser $argvParser;
 
     public function __construct(
         CommandRunner $commandRunner,
-        ArgvParser $argvParser
+        ArgvParser $argvParser,
+        ContainerInterface $container
     ) {
+        parent::__construct($container);
+
         $this->commandRunner = $commandRunner;
         $this->argvParser = $argvParser;
     }

@@ -17,15 +17,13 @@ use Whoops\Run;
  * Class WebApp
  * @package TheApp\Apps
  */
-class WebApp
+class WebApp extends App
 {
     private ContainerInterface $container;
     private RouterInterface $router;
     private MiddlewareStackFactory $stackFactory;
     private ErrorHandlerFactory $errorHandlerFactory;
     private ConfigInterface $config;
-
-    private static ContainerInterface $staticContainer;
 
     public function __construct(
         RouterInterface $router,
@@ -34,18 +32,13 @@ class WebApp
         ErrorHandlerFactory $errorHandlerFactory,
         ConfigInterface $config
     ) {
+        parent::__construct($container);
+
         $this->container = $container;
         $this->router = $router;
         $this->stackFactory = $stackFactory;
         $this->errorHandlerFactory = $errorHandlerFactory;
         $this->config = $config;
-
-        self::$staticContainer = $container;
-    }
-
-    public static function getContainer(): ContainerInterface
-    {
-        return self::$staticContainer;
     }
 
     /**
