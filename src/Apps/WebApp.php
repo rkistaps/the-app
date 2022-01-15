@@ -19,8 +19,6 @@ use Whoops\Run;
  */
 class WebApp extends App
 {
-    private ContainerInterface $container;
-    private ?RouterInterface $router = null;
     private MiddlewareStackFactory $stackFactory;
     private ErrorHandlerFactory $errorHandlerFactory;
     private ConfigInterface $config;
@@ -33,31 +31,26 @@ class WebApp extends App
     ) {
         parent::__construct($container);
 
-        $this->container = $container;
         $this->stackFactory = $stackFactory;
         $this->errorHandlerFactory = $errorHandlerFactory;
         $this->config = $config;
     }
 
-    public function addRouter(RouterInterface $router): self
-    {
-        $this->router = $router;
-
-        return $this;
-    }
-
     /**
      * Run application
      * @param ServerRequestInterface $request
+     * @param RouterInterface $router
      * @return ResponseInterface
      * @throws Throwable
      */
-    public function run(ServerRequestInterface $request): ResponseInterface
-    {
+    public function run(
+        ServerRequestInterface $request,
+        RouterInterface $router
+    ): ResponseInterface {
         try {
             $this->bootstrapApp();
 
-            $handler = $this->router->getRouteHandler($request);
+            $handler = $router->getRouteHandler($request);
             $stack = $this->stackFactory->buildFromRouteHandler($handler);
 
             foreach ($handler->getAttributes() as $name => $value) {
