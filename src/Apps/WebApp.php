@@ -20,13 +20,12 @@ use Whoops\Run;
 class WebApp extends App
 {
     private ContainerInterface $container;
-    private RouterInterface $router;
+    private ?RouterInterface $router = null;
     private MiddlewareStackFactory $stackFactory;
     private ErrorHandlerFactory $errorHandlerFactory;
     private ConfigInterface $config;
 
     public function __construct(
-        RouterInterface $router,
         ContainerInterface $container,
         MiddlewareStackFactory $stackFactory,
         ErrorHandlerFactory $errorHandlerFactory,
@@ -35,10 +34,16 @@ class WebApp extends App
         parent::__construct($container);
 
         $this->container = $container;
-        $this->router = $router;
         $this->stackFactory = $stackFactory;
         $this->errorHandlerFactory = $errorHandlerFactory;
         $this->config = $config;
+    }
+
+    public function addRouter(RouterInterface $router): self
+    {
+        $this->router = $router;
+
+        return $this;
     }
 
     /**
