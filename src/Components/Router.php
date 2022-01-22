@@ -64,13 +64,21 @@ class Router implements RouterInterface
             : $this->container->get($route->handler);
 
         if (!is_a($handler, RequestHandlerInterface::class)) {
-            throw new InvalidConfigException(get_class($handler) . ' does not implement ' . RequestHandlerInterface::class);
+            throw new InvalidConfigException(
+                get_class($handler) . ' does not implement ' . RequestHandlerInterface::class
+            );
         }
 
         $handler = new RouteHandler($handler);
-        $handler->addMiddlewares(...array_map(function (string $middlewareClassName) {
-            return $this->container->get($middlewareClassName);
-        }, $route->middlewareClassnames));
+        $handler->addMiddlewares(
+            ...
+            array_map(
+                fn($middleware) => is_callable($middleware)
+                    ? new CallableMiddleware($middleware, $this->container)
+                    : $this->container->get($middleware),
+                $route->middlewares
+            )
+        );
 
         foreach ($matchResult->getParameters() as $name => $value) {
             $handler->addAttribute($name, $value);

@@ -15,11 +15,15 @@ class Route
     public $handler;
 
     /** @var string[] */
-    public array $middlewareClassnames = [];
+    public array $middlewares = [];
 
-    public function withMiddleware(string $middlewareClassname): Route
+    /**
+     * @param callable|string $middleware
+     * @return $this
+     */
+    public function withMiddleware($middleware): Route
     {
-        $this->middlewareClassnames[] = $middlewareClassname;
+        $this->middlewares[] = $middleware;
 
         return $this;
     }
