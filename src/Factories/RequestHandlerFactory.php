@@ -6,6 +6,7 @@ use DI\Container;
 use Psr\Http\Server\RequestHandlerInterface;
 use TheApp\Components\CallableRequestHandler;
 use TheApp\Exceptions\InvalidConfigException;
+use TheApp\Structures\Route;
 
 class RequestHandlerFactory
 {
