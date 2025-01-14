@@ -6,6 +6,7 @@ use DI\Container;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TheApp\Components\Repositories\RouteRepository;
+use TheApp\Factories\RequestHandlerFactory;
 use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Interfaces\RouteHandlerInterface;
@@ -19,17 +20,13 @@ use TheApp\Structures\RouteMatchResult;
  */
 class Router implements RouterInterface
 {
-    private RouteRepository $repository;
-    private Container $container;
-
     private string $basePath = '';
 
     public function __construct(
-        RouteRepository $repository,
-        Container $container
+        private RouteRepository $repository,
+        private RequestHandlerFactory $requestHandlerFactory,
+        private Container $container
     ) {
-        $this->repository = $repository;
-        $this->container = $container;
     }
 
     public function withBasePath(string $basePath): Router
@@ -40,9 +37,12 @@ class Router implements RouterInterface
         return $router;
     }
 
+    public function getBasePath(): string
+    {
+        return $this->basePath;
+    }
+
     /**
-     * @param ServerRequestInterface $request
-     * @return RouteHandlerInterface
      * @throws NoRouteMatchException|InvalidConfigException
      */
     public function getRouteHandler(ServerRequestInterface $request): RouteHandlerInterface
@@ -59,17 +59,9 @@ class Router implements RouterInterface
     {
         $route = $matchResult->getRoute();
 
-        $handler = is_callable($route->handler)
-            ? new CallableRequestHandler($route->handler, $this->container)
-            : $this->container->get($route->handler);
+        $requestHandler = $this->requestHandlerFactory->fromRoute($route);
 
-        if (!is_a($handler, RequestHandlerInterface::class)) {
-            throw new InvalidConfigException(
-                get_class($handler) . ' does not implement ' . RequestHandlerInterface::class
-            );
-        }
-
-        $handler = new RouteHandler($handler);
+        $handler = new RouteHandler($requestHandler);
         $handler->addMiddlewares(
             ...
             array_map(
