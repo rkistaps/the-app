@@ -9,6 +9,7 @@ class Route
     public const METHOD_ANY = 'ANY';
 
     public string $path;
+    public ?string $name = null;
     public string $method = self::METHOD_ANY;
 
     /** @var string|callable */
