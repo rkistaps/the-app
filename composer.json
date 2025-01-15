@@ -20,7 +20,6 @@
     "psr/http-message": "^1.0",
     "psr/http-server-handler": "^1.0",
     "psr/http-server-middleware": "^1.0",
-    "jasny/http-message": "^1.3",
     "samejack/php-argv": "^1.0"
   },
   "require-dev": {
