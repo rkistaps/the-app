@@ -1,0 +1,27 @@
+# Known errors are recorded in the baseline. PHPStan fails only on errors not listed there.
+# When you fix one, PHPStan reports the stale entry: regenerate with
+#   ./vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    # Level 9 (explicit mixed) is deliberately not used: it forces assert()/@var narrowing
+    # on config and container values. Level 8 keeps the null checks.
+    level: 8
+    paths:
+        - src
+    excludePaths:
+        - tests
+    stubFiles:
+        - stubs/PhpDi.stub
+    # Docblock types stay "certain" (the default) so typos are caught. When PHPStan calls a
+    # defensive check dead because of a docblock, verify the docblock before deleting the check.
+    ignoreErrors:
+        # Plain `array` is allowed; add array<...> docblocks only where they help.
+        -
+            identifier: missingType.iterableValue
+            reportUnmatched: false
+        # Defensive `?? default` fallbacks on maps that currently cover every key are allowed.
+        -
+            identifier: nullCoalesce.offset
+            reportUnmatched: false

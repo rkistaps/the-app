@@ -88,7 +88,7 @@ class Router implements RouterInterface
      */
     public function get(string $path, $handler, string $name = null): Route
     {
-        $route = $this->buildRoute(Route::METHOD_GET, $this->basePath . $path, $handler, $name);
+        $route = $this->buildRoute(Route::METHOD_GET, $this->withBasePathPrefix($path), $handler, $name);
 
         $this->repository->addRoute($route);
 
@@ -104,7 +104,7 @@ class Router implements RouterInterface
      */
     public function post(string $path, $handler, string $name = null): Route
     {
-        $route = $this->buildRoute(Route::METHOD_POST, $this->basePath . $path, $handler, $name);
+        $route = $this->buildRoute(Route::METHOD_POST, $this->withBasePathPrefix($path), $handler, $name);
 
         $this->repository->addRoute($route);
 
@@ -120,11 +120,24 @@ class Router implements RouterInterface
      */
     public function any(string $path, $handler, string $name = null): Route
     {
-        $route = $this->buildRoute(Route::METHOD_ANY, $path, $handler, $name);
+        $route = $this->buildRoute(Route::METHOD_ANY, $this->withBasePathPrefix($path), $handler, $name);
 
         $this->repository->addRoute($route);
 
         return $route;
+    }
+
+    /**
+     * Prefix a route path with the base path. The "*" (any path) and "@" (custom regex) paths
+     * are special forms that a prefix would break, so they are left as they are.
+     */
+    private function withBasePathPrefix(string $path): string
+    {
+        if ($path === '*' || str_starts_with($path, '@')) {
+            return $path;
+        }
+
+        return $this->basePath . $path;
     }
 
     public function buildRoute(string $method, string $path, $handler, string $name = null): Route

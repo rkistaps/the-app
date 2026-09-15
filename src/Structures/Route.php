@@ -15,7 +15,7 @@ class Route
     /** @var string|callable */
     public $handler;
 
-    /** @var string[] */
+    /** @var array<callable|string> */
     public array $middlewares = [];
 
     /**

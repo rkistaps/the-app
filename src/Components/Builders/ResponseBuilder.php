@@ -2,16 +2,16 @@
 
 namespace TheApp\Components\Builders;
 
-use Jasny\HttpMessage\Response;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 
 class ResponseBuilder
 {
     protected ResponseInterface $response;
 
-    public function __construct()
+    public function __construct(ResponseFactoryInterface $responseFactory)
     {
-        $this->response = new Response();
+        $this->response = $responseFactory->createResponse();
     }
 
     public function withRedirect(string $location, int $statusCode = 301): ResponseBuilder
@@ -22,7 +22,7 @@ class ResponseBuilder
         return $this;
     }
 
-    /**c
+    /**
      * @param string $key
      * @param string|string[] $value
      * @return ResponseBuilder

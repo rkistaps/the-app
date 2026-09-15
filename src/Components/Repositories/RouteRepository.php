@@ -42,11 +42,10 @@ class RouteRepository
                 // remove "@" regex delimiter
                 $pattern = '`' . substr($route->path, 1) . '`u';
                 $isMatch = preg_match($pattern, $requestPath, $parameters) === 1;
-            } elseif (!$route->hasParameters()) {
+            } elseif (($position = strpos($route->path, '[')) === false) {
                 // No params in url, do string comparison
                 $isMatch = strcmp($requestPath, $route->path) === 0;
             } else {
-                $position = strpos($route->path, '[');
                 // Compare longest non-param string with url before moving on to regex
                 // Check if last character before param is a slash, because it could be optional if param is optional too (see https://github.com/dannyvankooten/AltoRouter/issues/241)
                 if (strncmp($requestPath, $route->path, $position) !== 0 && ($lastRequestUrlChar === '/' || $route->path[$position - 1] !== '/')) {

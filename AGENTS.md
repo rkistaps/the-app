@@ -6,9 +6,10 @@ TheApp (`rkistaps/the-app`) is a small PHP micro-framework library. It routes PS
 
 - PHP `^8.3`
 - PHP-DI 6 for the container and autowiring (`DI\Container`, `$container->call()`)
-- PSR-7 / PSR-15 interfaces only. The repo ships no concrete request/response implementation.
+- PSR-7 / PSR-15 / PSR-17 interfaces only. The repo ships no concrete request/response implementation, so consumers bind one. For example, `ResponseBuilder` needs a `Psr\Http\Message\ResponseFactoryInterface` in the container.
 - `filp/whoops` for error pages, `rappasoft/laravel-helpers` for `array_get()` and similar helpers, `samejack/php-argv` for CLI argument parsing
 - Tests: PHPUnit 11 + Mockery
+- Static analysis: PHPStan 2 at level 8
 
 ## Commands
 
@@ -20,9 +21,21 @@ PHP isn't installed on the host. Everything runs in the `theapp_workspace` Docke
 ./docker-test                          # ./vendor/bin/phpunit tests/
 ./docker-test --filter RouterTest tests/
 ./docker-coverage                      # text summary + coverage/html/index.html
+./docker-run ./vendor/bin/phpstan analyse
 ```
 
-There's no `phpunit.xml`, linter, or static analysis config. `package.json` is a leftover stub and isn't used. Docker and other dev-only files are excluded from the Composer package through `export-ignore` in `.gitattributes`. Add any new dev-only root file there too.
+There's no `phpunit.xml` or linter. `package.json` is a leftover stub and isn't used. Docker and other dev-only files are excluded from the Composer package through `export-ignore` in `.gitattributes`. Add any new dev-only root file there too.
+
+## PHPStan rules
+
+See `phpstan.neon`. The rules match the-trader.
+
+- Level 8, not max. Don't add `assert()` or `@var` narrowing just to use `mixed` config or container values.
+- Plain `array` is fine. Add `array<...>` docblocks only where they help.
+- Defensive `?? default` fallbacks are allowed.
+- When PHPStan calls a check "always true/false" because of a docblock, verify the docblock against runtime behaviour before deleting the check.
+- `stubs/PhpDi.stub` narrows `DI\Container::get()` and `make()` to the requested class.
+- Known errors live in `phpstan-baseline.neon`. Don't hide new errors with `@phpstan-ignore` or by adding them to the baseline. After fixing a baselined error, regenerate the baseline (the command is at the top of `phpstan.neon`), because PHPStan fails on stale entries.
 
 ## Layout
 

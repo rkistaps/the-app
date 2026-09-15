@@ -1,0 +1,35 @@
+<?php
+
+// PHP-DI declares get()/make() as `mixed|T`, which collapses to mixed. Resolving a class name
+// yields an instance of that class, so narrow the return type when a class-string is passed.
+
+namespace DI;
+
+class Container
+{
+    /**
+     * @template T of object
+     * @param string|class-string<T> $name
+     * @return ($name is class-string<T> ? T : mixed)
+     */
+    public function get($name) {}
+
+    /**
+     * @template T of object
+     * @param string|class-string<T> $name
+     * @param array<array-key, mixed> $parameters
+     * @return ($name is class-string<T> ? T : mixed)
+     */
+    public function make($name, array $parameters = []) {}
+}
+
+interface FactoryInterface
+{
+    /**
+     * @template T of object
+     * @param string|class-string<T> $name
+     * @param array<array-key, mixed> $parameters
+     * @return ($name is class-string<T> ? T : mixed)
+     */
+    public function make($name, array $parameters = []);
+}

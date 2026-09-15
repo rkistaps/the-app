@@ -3,7 +3,6 @@
 namespace TheApp\Factories;
 
 use DI\Container;
-use Psr\Container\ContainerInterface;
 use TheApp\Components\CallableCommandHandler;
 use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Interfaces\CommandHandlerInterface;
@@ -11,7 +10,7 @@ use TheApp\Structures\Command;
 
 class CommandHandlerFactory
 {
-    private ContainerInterface $container;
+    private Container $container;
 
     public function __construct(Container $container)
     {

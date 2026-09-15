@@ -50,6 +50,25 @@ class RouterTest extends MockeryTestCase
         $this->router->getRouteHandler($request);
     }
 
+    public function testRouteMethodsApplyBasePath()
+    {
+        $this->repository->shouldReceive('addRoute');
+        $router = $this->router->withBasePath('/api');
+
+        $this->assertEquals('/api/users', $router->get('/users', 'Handler')->path);
+        $this->assertEquals('/api/users', $router->post('/users', 'Handler')->path);
+        $this->assertEquals('/api/users', $router->any('/users', 'Handler')->path);
+    }
+
+    public function testBasePathSkipsAnyAndCustomPaths()
+    {
+        $this->repository->shouldReceive('addRoute');
+        $router = $this->router->withBasePath('/api');
+
+        $this->assertEquals('*', $router->any('*', 'Handler')->path);
+        $this->assertEquals('@^/users/\d+$', $router->get('@^/users/\d+$', 'Handler')->path);
+    }
+
     protected function tearDown(): void
     {
         Mockery::close();

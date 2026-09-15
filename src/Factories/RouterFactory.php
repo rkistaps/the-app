@@ -23,7 +23,7 @@ class RouterFactory
 
         $basePath = $config->get('router.basePath');
         if ($basePath) {
-            $router->withBasePath($basePath);
+            $router = $router->withBasePath($basePath);
         }
 
         $routerConfigurators = $config->get('router.configurators', []);

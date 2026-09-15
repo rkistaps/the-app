@@ -29,7 +29,8 @@ class ConsoleApp extends App
     {
         $params = $this->argvParser->parseConfigs($argv);
         $commandName = $params['command'] ?? null;
-        $command = $this->commandRunner->findCommandByName($commandName);
+        // A missing or valueless --command argument is not a string
+        $command = is_string($commandName) ? $this->commandRunner->findCommandByName($commandName) : null;
         if (!$command) {
             echo 'Command not found' . PHP_EOL;
             return;

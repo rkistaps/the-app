@@ -20,10 +20,16 @@
     "psr/http-message": "^1.0",
     "psr/http-server-handler": "^1.0",
     "psr/http-server-middleware": "^1.0",
-    "samejack/php-argv": "^1.0"
+    "samejack/php-argv": "^1.0",
+    "psr/http-factory": "^1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^11.5",
-    "mockery/mockery": "^1.6"
+    "mockery/mockery": "^1.6",
+    "phpstan/phpstan": "^2.2"
+  },
+  "scripts": {
+    "test": "phpunit tests",
+    "analyse": "phpstan analyse"
   }
 }
