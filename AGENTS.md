@@ -43,9 +43,9 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 
 | Directory | Contents |
 | --- | --- |
-| `src/Apps` | `App` (base, holds a static container), `WebApp`, `ConsoleApp` |
-| `src/Components` | Runtime pieces: `Router`, `RouteRepository`, `MiddlewareStack`, `RouteHandler`, `CommandRunner`, `HttpResponseEmitter`, `ArrayConfig`, and `Callable*` adapters |
-| `src/Factories` | Build components from the container and `ConfigInterface` |
+| `src/Apps` | `App` (base: container, `resolve()` helper), `WebApp`, `ConsoleApp` |
+| `src/Components` | Runtime pieces: `Router`, `RouteRepository`, `MiddlewareStack`, `RouteHandler`, `CommandRunner`, `HttpResponseEmitter`, and `Callable*` adapters. `ArrayConfig` is a standalone helper that the framework doesn't read |
+| `src/Factories` | Build components from the container |
 | `src/Interfaces` | Extension points (`RouterConfiguratorInterface`, `CommandConfiguratorInterface`, `ErrorHandlerInterface`, and others) |
 | `src/Structures` | Plain data objects with public properties (`Route`, `Command`, `RouteMatchResult`) |
 | `src/Exceptions` | `InvalidConfigException`, `NoRouteMatchException` |
@@ -53,13 +53,15 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 
 ## How it works
 
-**Web request flow.** `AppFactory::webAppFromContainer()` returns a `WebApp`. `WebApp::run($request, $router)` then does the following:
+**App setup is code, not config.** The framework never reads a config file. Apps are set up with immutable `with*` methods: `WebApp::withRouterConfigurators(array)`, `WebApp::withErrorHandler()` and `ConsoleApp::withCommandConfigurators(array)`. Each accepts class names or instances. `App::resolve()` resolves class names from the container when the app runs, and throws `InvalidConfigException` for the wrong type. Each app builds its own `Router` (with a fresh `RouteRepository`) or clones its `CommandRunner` on first use, and `__clone` resets that cache, so apps returned by `with*` never share routes or commands.
+
+**Web request flow.** `AppFactory::webAppFromContainer()` returns a `WebApp`. `WebApp::run($request, ?$router)` then does the following:
 
 1. It registers Whoops.
-2. `Router::getRouteHandler()` asks `RouteRepository::matchRoute()` for a match. If nothing matches, it throws `NoRouteMatchException`.
+2. It uses the router passed in, or builds one from the configurators. `Router::getRouteHandler()` asks `RouteRepository::matchRoute()` for a match. If nothing matches, it throws `NoRouteMatchException`.
 3. The matched route's handler and middlewares are resolved. A callable is wrapped in `CallableRequestHandler` or `CallableMiddleware`. A class name is fetched from the container.
 4. `MiddlewareStackFactory` builds a `MiddlewareStack`. Route parameters are added as request attributes, and the stack handles the request.
-5. Any `Throwable` goes to the error handler class named in the `error_handler` config key. If that key isn't set, the exception is rethrown.
+5. Any `Throwable` goes to the handler from `withErrorHandler()`. Without one, the exception is rethrown.
 
 `HttpResponseEmitter` sends the resulting response.
 
@@ -68,18 +70,12 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 - A path starting with `@` is a raw regex, with the `@` stripped.
 - `[type:name]` defines a parameter, and a trailing `?` makes it optional. The types are `i` (int), `a` (alphanumeric), `h` (hex), `*`, `**`, and empty (a single segment).
 
-**Config-driven wiring** uses `ConfigInterface` with dot-notation keys:
-- `router.basePath`
-- `router.configurators`: class names implementing `RouterConfiguratorInterface`
-- `command.configurators`: class names implementing `CommandConfiguratorInterface`
-- `error_handler`: a class implementing `ErrorHandlerInterface`
-
 **Console.** `ConsoleApp::run($argv)` reads the `command` argument, looks it up in `CommandRunner`, and passes the remaining arguments to the handler's `handle(array $params)`.
 
 ## Conventions
 
 - Resolve dependencies through the container or constructor injection. Don't use `new` for services. Handlers and middlewares may be a class name or a callable, so support both when adding new extension points.
-- Wherever a factory resolves a configured class, check it against the expected interface and throw `InvalidConfigException` on a mismatch.
+- Don't make the framework read config keys. New setup options are `with*` methods on the app that accept a class name or an instance and resolve it with `App::resolve()`, which checks the type.
 - `Router::withBasePath()` is immutable and returns a clone. Keep "with" methods immutable.
 - Style is PSR-12. Newer code uses typed properties and constructor property promotion (see `Router`), while older code declares properties explicitly. Match the file you're editing, and prefer typed signatures in new code.
 - Tests extend `Mockery\Adapter\Phpunit\MockeryTestCase`, mock collaborators with `Mockery::mock()`, and use `testMethodName` naming.

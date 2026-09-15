@@ -10,7 +10,7 @@ It's built on [PHP-DI](https://php-di.org/), so handlers, middleware and command
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Web application](#web-application)
-  - [Container and config](#1-container-and-config)
+  - [Container](#1-container)
   - [Routes](#2-routes)
   - [Front controller](#3-front-controller)
   - [Route paths](#route-paths)
@@ -18,7 +18,6 @@ It's built on [PHP-DI](https://php-di.org/), so handlers, middleware and command
   - [Error handling](#error-handling)
   - [Building responses](#building-responses)
 - [Console application](#console-application)
-- [Configuration reference](#configuration-reference)
 - [Development](#development)
 
 ## Requirements
@@ -43,50 +42,32 @@ composer require nyholm/psr7 nyholm/psr7-server
 A minimal project looks like this:
 
 ```
-config/config.php         # configuration array
 config/container.php      # builds the PHP-DI container
 public/index.php          # front controller
 src/Routes/AppRoutes.php  # route definitions
 ```
 
-### 1. Container and config
+### 1. Container
 
-Routes are registered by *router configurators*, which are classes you list in the config:
-
-```php
-// config/config.php
-return [
-    'router' => [
-        'configurators' => [
-            App\Routes\AppRoutes::class,
-        ],
-    ],
-];
-```
-
-The container needs three definitions: the config, a PSR-17 response factory, and the router built from the config.
+TheApp doesn't need any container definitions of its own. The examples below inject a PSR-17 response factory into handlers, so that's the only definition here:
 
 ```php
 // config/container.php
 use DI\ContainerBuilder;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ResponseFactoryInterface;
-use TheApp\Factories\ConfigFactory;
-use TheApp\Factories\RouterFactory;
-use TheApp\Interfaces\ConfigInterface;
-use TheApp\Interfaces\RouterInterface;
 
 $builder = new ContainerBuilder();
 $builder->addDefinitions([
-    ConfigInterface::class => fn(ConfigFactory $factory) => $factory->fromArray(require __DIR__ . '/config.php'),
     ResponseFactoryInterface::class => fn() => new Psr17Factory(),
-    RouterInterface::class => fn(RouterFactory $factory, ConfigInterface $config) => $factory->buildFromConfig($config),
 ]);
 
 return $builder->build();
 ```
 
 ### 2. Routes
+
+Routes are registered by *router configurators*, which are classes implementing `RouterConfiguratorInterface`. You pass them to the app in the front controller.
 
 A route handler is either a class name or a callable:
 
@@ -156,9 +137,10 @@ The router provides `get()`, `post()` and `any()`, where `any()` matches every H
 // public/index.php
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
+use App\Errors\ErrorHandler;
+use App\Routes\AppRoutes;
 use TheApp\Components\HttpResponseEmitter;
 use TheApp\Factories\AppFactory;
-use TheApp\Interfaces\RouterInterface;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -167,11 +149,21 @@ $container = require __DIR__ . '/../config/container.php';
 $psr17 = new Psr17Factory();
 $request = (new ServerRequestCreator($psr17, $psr17, $psr17, $psr17))->fromGlobals();
 
-$app = AppFactory::webAppFromContainer($container);
-$response = $app->run($request, $container->get(RouterInterface::class));
+$app = AppFactory::webAppFromContainer($container)
+    ->withRouterConfigurators([
+        AppRoutes::class,
+    ])
+    ->withErrorHandler(ErrorHandler::class);
 
-(new HttpResponseEmitter())->emit($response);
+(new HttpResponseEmitter())->emit($app->run($request));
 ```
+
+How the setup methods behave:
+- **Arguments:** `withRouterConfigurators()` and `withErrorHandler()` accept class names, which are resolved from the container, or ready-made instances.
+- **Immutable:** each returns a new app and leaves the original unchanged.
+- **Type checks:** a class that doesn't implement the expected interface throws `TheApp\Exceptions\InvalidConfigException`.
+- **Lists in a file:** a long list of configurators can live in its own file, such as `->withRouterConfigurators(require __DIR__ . '/../config/routes.php')`, where the file returns an array of class names.
+- **Your own router:** to skip configurators, pass a router you built yourself as the second argument, as in `$app->run($request, $router)`.
 
 Set your web server's document root to `public/` and send every request that isn't a real file to `index.php`. To try it locally, run `php -S localhost:8080 -t public`.
 
@@ -190,7 +182,15 @@ Set your web server's document root to `public/` and send every request that isn
 | `@^/legacy/(?<id>\d+)$` | A raw regex, marked with a leading `@`. Named groups become request attributes |
 | `*` | Every path. Useful as a catch-all registered last |
 
-To put a group of routes under a common prefix, set `router.basePath` in the config, or call `$router->withBasePath('/api')`, which returns a new router. The prefix is added to normal paths but not to `*` or `@` paths.
+To put a group of routes under a common prefix, call `withBasePath()` in a configurator. It returns a new router that registers into the same route list. The prefix is added to normal paths but not to `*` or `@` paths.
+
+```php
+public function configureRouter(Router $router): void
+{
+    $api = $router->withBasePath('/api');
+    $api->get('/users', UserListHandler::class); // matches /api/users
+}
+```
 
 ### Middleware
 
@@ -214,15 +214,7 @@ $router->get('/admin', AdminHandler::class)
 
 ### Error handling
 
-`WebApp::run()` catches every exception, including `TheApp\Exceptions\NoRouteMatchException` when no route matches. It passes the exception to the class named in the `error_handler` config key. If that key isn't set, the exception is rethrown and [Whoops](https://github.com/filp/whoops) shows its debug page. That's useful in development, but configure an error handler for production.
-
-```php
-// config/config.php
-return [
-    'error_handler' => App\Errors\ErrorHandler::class,
-    // ...
-];
-```
+`WebApp::run()` catches every exception, including `TheApp\Exceptions\NoRouteMatchException` when no route matches. It passes the exception to the handler set with `withErrorHandler()`, as shown in the [front controller](#3-front-controller). Without one, the exception is rethrown and [Whoops](https://github.com/filp/whoops) shows its debug page. That's useful in development, but set an error handler for production.
 
 ```php
 namespace App\Errors;
@@ -275,37 +267,7 @@ $router->get('/old-page', function (ServerRequestInterface $request, Container $
 
 ## Console application
 
-Commands are registered by *command configurators*, which are listed in the config:
-
-```php
-// config/config.php
-return [
-    'command' => [
-        'configurators' => [
-            App\Console\UserCommands::class,
-        ],
-    ],
-];
-```
-
-The container needs the config and a `CommandRunner` built from it:
-
-```php
-// config/container.php
-use DI\ContainerBuilder;
-use TheApp\Components\CommandRunner;
-use TheApp\Factories\CommandRunnerFactory;
-use TheApp\Factories\ConfigFactory;
-use TheApp\Interfaces\ConfigInterface;
-
-$builder = new ContainerBuilder();
-$builder->addDefinitions([
-    ConfigInterface::class => fn(ConfigFactory $factory) => $factory->fromArray(require __DIR__ . '/config.php'),
-    CommandRunner::class => fn(CommandRunnerFactory $factory, ConfigInterface $config) => $factory->fromConfig($config),
-]);
-
-return $builder->build();
-```
+Commands are registered by *command configurators*, which are classes implementing `CommandConfiguratorInterface`. As on the web side, TheApp needs no container definitions of its own.
 
 A command handler is either a callable or a class name:
 
@@ -348,18 +310,25 @@ final class ImportUsersCommand implements CommandHandlerInterface
 }
 ```
 
-The entry point passes `$argv` to the console app:
+The entry point passes the configurators and `$argv` to the console app:
 
 ```php
 // console.php
+use App\Console\UserCommands;
 use TheApp\Factories\AppFactory;
 
 require __DIR__ . '/vendor/autoload.php';
 
 $container = require __DIR__ . '/config/container.php';
 
-AppFactory::consoleAppFromContainer($container)->run($argv);
+AppFactory::consoleAppFromContainer($container)
+    ->withCommandConfigurators([
+        UserCommands::class,
+    ])
+    ->run($argv);
 ```
+
+`withCommandConfigurators()` works like `withRouterConfigurators()`. It takes class names or instances, returns a new app, and accepts an array loaded from a file, such as `require __DIR__ . '/config/commands.php'`.
 
 Choose the command with `--command`, and pass the other options as `--name=value`:
 
@@ -371,17 +340,6 @@ php console.php --command=user/import --file=export.csv
 If the command name is missing or unknown, the app prints `Command not found`.
 
 Option values arrive as strings, so avoid `bool` parameters: `--force=false` is converted to `true`. Take a string and compare it instead.
-
-## Configuration reference
-
-`ArrayConfig` reads nested keys with dot notation, such as `$config->get('router.basePath', '')`. You can inject `ConfigInterface` into your own classes to read your own settings the same way.
-
-| Key | Used by | Description |
-| --- | --- | --- |
-| `router.configurators` | Web | Classes implementing `RouterConfiguratorInterface` |
-| `router.basePath` | Web | Prefix added to every route path |
-| `error_handler` | Web | Class implementing `ErrorHandlerInterface` |
-| `command.configurators` | Console | Classes implementing `CommandConfiguratorInterface` |
 
 ## Development
 
