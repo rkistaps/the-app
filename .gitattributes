@@ -1,0 +1,20 @@
+# Keep shell scripts runnable in the Linux container regardless of host checkout settings
+docker text eol=lf
+docker-* text eol=lf
+run-tests text eol=lf
+
+# Development-only files, excluded from the Composer dist archive
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.github export-ignore
+/docker-conf export-ignore
+/docker-compose.yaml export-ignore
+/docker export-ignore
+/docker-run export-ignore
+/docker-test export-ignore
+/docker-coverage export-ignore
+/run-tests export-ignore
+/tests export-ignore
+/AGENTS.md export-ignore
+/CLAUDE.md export-ignore
+/package.json export-ignore

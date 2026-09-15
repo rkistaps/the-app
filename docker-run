@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# Execute commands inside the running Docker workspace container:
+#   ./docker-run composer install
+#   ./docker-run composer require vendor/package
+#   ./docker-run php -v
+
+workspaceId=$(docker-compose ps -q app)
+if [[ -z "$workspaceId" ]] || ! docker ps -q --no-trunc | grep -q "${workspaceId}"; then
+  echo "Error: Docker container 'theapp_workspace' is not running."
+  echo "Start it with: ./docker start"
+  exit 1
+fi
+
+if [[ $# -eq 0 ]]; then
+  echo "Usage: ./docker-run <command> [args...]"
+  echo "Examples:"
+  echo "  ./docker-run composer install"
+  echo "  ./docker-run php -v"
+  exit 1
+fi
+
+# Use bash -lc and explicit directory to avoid host path issues on Windows/Git Bash.
+docker exec -i theapp_workspace bash -lc "cd /var/www/html && $*"

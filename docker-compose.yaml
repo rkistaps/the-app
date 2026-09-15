@@ -1,0 +1,11 @@
+services:
+  app:
+    container_name: theapp_workspace
+    build:
+      context: ./
+      dockerfile: ./docker-conf/PHP.Dockerfile
+    # No web server: keep the container alive so commands can be run in it with docker exec
+    command: ["sleep", "infinity"]
+    init: true
+    volumes:
+      - ./:/var/www/html

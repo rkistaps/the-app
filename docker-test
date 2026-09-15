@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# Check if Docker container is running
+workspaceId=$(docker-compose ps -q app)
+if [[ -z "$workspaceId" ]] || ! docker ps -q --no-trunc | grep -q "${workspaceId}"; then
+  echo "Error: Docker container 'theapp_workspace' is not running."
+  echo "Start it with: ./docker start"
+  exit 1
+fi
+
+echo "Running tests inside Docker container..."
+
+# Run tests inside the container, passing through any arguments
+# Note: Using bash -c instead of -w flag to avoid Windows/Git Bash path conversion issues
+if [ $# -eq 0 ]; then
+  docker exec theapp_workspace bash -c "cd /var/www/html && ./vendor/bin/phpunit tests/"
+else
+  docker exec theapp_workspace bash -c "cd /var/www/html && ./vendor/bin/phpunit $*"
+fi

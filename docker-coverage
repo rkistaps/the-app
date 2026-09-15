@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+# Check if Docker container is running
+workspaceId=$(docker-compose ps -q app)
+if [[ -z "$workspaceId" ]] || ! docker ps -q --no-trunc | grep -q "${workspaceId}"; then
+  echo "Error: Docker container 'theapp_workspace' is not running."
+  echo "Start it with: ./docker start"
+  exit 1
+fi
+
+if ! docker exec theapp_workspace php -m | grep -qi '^pcov$'; then
+  echo "Error: the pcov coverage driver is not installed in the container."
+  echo "Rebuild the image with: ./docker build && ./docker restart"
+  exit 1
+fi
+
+echo "Running tests with coverage inside Docker container..."
+
+# Text summary in the terminal, HTML report in coverage/html/index.html.
+# Extra arguments are passed to PHPUnit, e.g. ./docker-coverage --filter RouterTest
+docker exec theapp_workspace bash -c "cd /var/www/html && ./vendor/bin/phpunit tests/ --coverage-filter src --coverage-text --coverage-html coverage/html $*"
+status=$?
+
+echo
+echo "HTML report: coverage/html/index.html"
+exit $status
