@@ -5,14 +5,13 @@ TheApp is a small PHP micro-framework for two jobs:
 - **Web:** it routes PSR-7 requests through PSR-15 middleware to your request handlers.
 - **Console:** it maps command-line arguments to command handlers.
 
-It's built on [PHP-DI](https://php-di.org/), so handlers, middleware and commands are resolved from the container with their dependencies autowired. It doesn't include a PSR-7 implementation, so you can use any one. The examples below use [nyholm/psr7](https://github.com/Nyholm/psr7).
+It's built on [PHP-DI](https://php-di.org/), so handlers, middleware and commands are resolved from the container with their dependencies autowired. It doesn't include a PSR-7 implementation, so you can use any one. The examples below use [nyholm/psr7](https://github.com/Nyholm/psr7), and `Acme\` stands for your own project's namespace. Classes in `TheApp\` come from this package.
 
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Web application](#web-application)
-  - [Container](#1-container)
-  - [Routes](#2-routes)
-  - [Front controller](#3-front-controller)
+  - [Routes](#1-routes)
+  - [Front controller](#2-front-controller)
   - [Route paths](#route-paths)
   - [Middleware](#middleware)
   - [Error handling](#error-handling)
@@ -39,33 +38,9 @@ composer require nyholm/psr7 nyholm/psr7-server
 
 ## Web application
 
-A minimal project looks like this:
+TheApp doesn't expect any particular files or directories. It needs a PHP-DI container, your route definitions, and an entry point that runs the app.
 
-```
-config/container.php      # builds the PHP-DI container
-public/index.php          # front controller
-src/Routes/AppRoutes.php  # route definitions
-```
-
-### 1. Container
-
-TheApp doesn't need any container definitions of its own. The examples below inject a PSR-17 response factory into handlers, so that's the only definition here:
-
-```php
-// config/container.php
-use DI\ContainerBuilder;
-use Nyholm\Psr7\Factory\Psr17Factory;
-use Psr\Http\Message\ResponseFactoryInterface;
-
-$builder = new ContainerBuilder();
-$builder->addDefinitions([
-    ResponseFactoryInterface::class => fn() => new Psr17Factory(),
-]);
-
-return $builder->build();
-```
-
-### 2. Routes
+### 1. Routes
 
 Routes are registered by *router configurators*, which are classes implementing `RouterConfiguratorInterface`. You pass them to the app in the front controller.
 
@@ -75,16 +50,16 @@ A route handler is either a class name or a callable:
 - **Callable:** it receives the request as its first argument. Any other type-hinted parameters are resolved from the container.
 
 ```php
-// src/Routes/AppRoutes.php
-namespace App\Routes;
+// src/Routes/WebRoutes.php
+namespace Acme\Routes;
 
-use App\Handlers\HomeHandler;
+use Acme\Handlers\HomeHandler;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TheApp\Components\Router;
 use TheApp\Interfaces\RouterConfiguratorInterface;
 
-final class AppRoutes implements RouterConfiguratorInterface
+final class WebRoutes implements RouterConfiguratorInterface
 {
     public function configureRouter(Router $router): void
     {
@@ -106,7 +81,7 @@ final class AppRoutes implements RouterConfiguratorInterface
 
 ```php
 // src/Handlers/HomeHandler.php
-namespace App\Handlers;
+namespace Acme\Handlers;
 
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -131,27 +106,34 @@ final class HomeHandler implements RequestHandlerInterface
 
 The router provides `get()`, `post()` and `any()`, where `any()` matches every HTTP method. Routes are checked in the order they were registered, and the first match wins.
 
-### 3. Front controller
+### 2. Front controller
 
 ```php
-// public/index.php
+// index.php
+use Acme\Errors\ErrorHandler;
+use Acme\Routes\WebRoutes;
+use DI\ContainerBuilder;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
-use App\Errors\ErrorHandler;
-use App\Routes\AppRoutes;
+use Psr\Http\Message\ResponseFactoryInterface;
 use TheApp\Components\HttpResponseEmitter;
 use TheApp\Factories\AppFactory;
 
-require __DIR__ . '/../vendor/autoload.php';
-
-$container = require __DIR__ . '/../config/container.php';
+require __DIR__ . '/vendor/autoload.php';
 
 $psr17 = new Psr17Factory();
 $request = (new ServerRequestCreator($psr17, $psr17, $psr17, $psr17))->fromGlobals();
 
+$container = (new ContainerBuilder())
+    ->addDefinitions([
+        // Used by the handlers in these examples. TheApp itself needs no definitions.
+        ResponseFactoryInterface::class => $psr17,
+    ])
+    ->build();
+
 $app = AppFactory::webAppFromContainer($container)
     ->withRouterConfigurators([
-        AppRoutes::class,
+        WebRoutes::class,
     ])
     ->withErrorHandler(ErrorHandler::class);
 
@@ -162,10 +144,12 @@ How the setup methods behave:
 - **Arguments:** `withRouterConfigurators()` and `withErrorHandler()` accept class names, which are resolved from the container, or ready-made instances.
 - **Immutable:** each returns a new app and leaves the original unchanged.
 - **Type checks:** a class that doesn't implement the expected interface throws `TheApp\Exceptions\InvalidConfigException`.
-- **Lists in a file:** a long list of configurators can live in its own file, such as `->withRouterConfigurators(require __DIR__ . '/../config/routes.php')`, where the file returns an array of class names.
+- **Lists in a file:** a long list of configurators can live in a file of your choice that returns an array of class names, such as `->withRouterConfigurators(require __DIR__ . '/routes.php')`.
 - **Your own router:** to skip configurators, pass a router you built yourself as the second argument, as in `$app->run($request, $router)`.
 
-Set your web server's document root to `public/` and send every request that isn't a real file to `index.php`. To try it locally, run `php -S localhost:8080 -t public`.
+Build the container however and wherever suits your project. For bigger apps that usually means a separate file of definitions.
+
+Point your web server at the front controller for every request that isn't a real file. To try it locally, run `php -S localhost:8080 index.php`.
 
 ### Route paths
 
@@ -214,10 +198,10 @@ $router->get('/admin', AdminHandler::class)
 
 ### Error handling
 
-`WebApp::run()` catches every exception, including `TheApp\Exceptions\NoRouteMatchException` when no route matches. It passes the exception to the handler set with `withErrorHandler()`, as shown in the [front controller](#3-front-controller). Without one, the exception is rethrown and [Whoops](https://github.com/filp/whoops) shows its debug page. That's useful in development, but set an error handler for production.
+`WebApp::run()` catches every exception, including `TheApp\Exceptions\NoRouteMatchException` when no route matches. It passes the exception to the handler set with `withErrorHandler()`, as shown in the [front controller](#2-front-controller). Without one, the exception is rethrown and [Whoops](https://github.com/filp/whoops) shows its debug page. That's useful in development, but set an error handler for production.
 
 ```php
-namespace App\Errors;
+namespace Acme\Errors;
 
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -275,7 +259,7 @@ A command handler is either a callable or a class name:
 - **Class name:** the class must implement `CommandHandlerInterface`, and its `handle()` method receives all options as an array.
 
 ```php
-namespace App\Console;
+namespace Acme\Console;
 
 use TheApp\Components\CommandRunner;
 use TheApp\Interfaces\CommandConfiguratorInterface;
@@ -296,7 +280,7 @@ final class UserCommands implements CommandConfiguratorInterface
 ```
 
 ```php
-namespace App\Console;
+namespace Acme\Console;
 
 use TheApp\Interfaces\CommandHandlerInterface;
 
@@ -314,12 +298,13 @@ The entry point passes the configurators and `$argv` to the console app:
 
 ```php
 // console.php
-use App\Console\UserCommands;
+use Acme\Console\UserCommands;
+use DI\ContainerBuilder;
 use TheApp\Factories\AppFactory;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$container = require __DIR__ . '/config/container.php';
+$container = (new ContainerBuilder())->build();
 
 AppFactory::consoleAppFromContainer($container)
     ->withCommandConfigurators([
@@ -328,7 +313,7 @@ AppFactory::consoleAppFromContainer($container)
     ->run($argv);
 ```
 
-`withCommandConfigurators()` works like `withRouterConfigurators()`. It takes class names or instances, returns a new app, and accepts an array loaded from a file, such as `require __DIR__ . '/config/commands.php'`.
+`withCommandConfigurators()` works like `withRouterConfigurators()`. It takes class names or instances, returns a new app, and accepts an array loaded from a file, such as `require __DIR__ . '/commands.php'`.
 
 Choose the command with `--command`, and pass the other options as `--name=value`:
 
