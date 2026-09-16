@@ -206,6 +206,7 @@ namespace Acme\Errors;
 
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use TheApp\Exceptions\MethodNotAllowedException;
 use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Interfaces\ErrorHandlerInterface;
 use Throwable;
@@ -218,6 +219,11 @@ final class ErrorHandler implements ErrorHandlerInterface
 
     public function handle(Throwable $throwable): ResponseInterface
     {
+        if ($throwable instanceof MethodNotAllowedException) {
+            return $this->responses->createResponse(405)
+                ->withHeader('Allow', implode(', ', $throwable->getAllowedMethods()));
+        }
+
         $status = $throwable instanceof NoRouteMatchException ? 404 : 500;
 
         $response = $this->responses->createResponse($status);
@@ -227,6 +233,8 @@ final class ErrorHandler implements ErrorHandlerInterface
     }
 }
 ```
+
+When a route matches the path but not the HTTP method, the router throws `MethodNotAllowedException`. It extends `NoRouteMatchException`, so check for it first, as above. Error handlers that don't check for it keep returning 404.
 
 For a debug page during development, install [Whoops](https://github.com/filp/whoops) with `composer require --dev filp/whoops`. Then register it in the front controller only in development, and skip `withErrorHandler()` so exceptions reach it:
 

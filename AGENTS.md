@@ -50,7 +50,7 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 | `src/Factories` | Build components from the container |
 | `src/Interfaces` | Extension points (`RouterConfiguratorInterface`, `CommandConfiguratorInterface`, `ErrorHandlerInterface`, and others) |
 | `src/Structures` | Plain data objects with public properties (`Route`, `Command`, `RouteMatchResult`) |
-| `src/Exceptions` | `InvalidConfigException`, `NoRouteMatchException` |
+| `src/Exceptions` | `InvalidConfigException`, `NoRouteMatchException`, `MethodNotAllowedException` (extends `NoRouteMatchException`) |
 | `tests` | Mirrors `src/` (for example `tests/Components/RouterTest.php`) |
 
 ## How it works
@@ -59,7 +59,7 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 
 **Web request flow.** `AppFactory::webAppFromContainer()` returns a `WebApp`. `WebApp::run($request, ?$router)` then does the following:
 
-1. It uses the router passed in, or builds one from the configurators. `Router::getRouteHandler()` asks `RouteRepository::matchRoute()` for a match. If nothing matches, it throws `NoRouteMatchException`.
+1. It uses the router passed in, or builds one from the configurators. `Router::getRouteHandler()` asks `RouteRepository::matchRoute()` for a match. If nothing matches, it throws `NoRouteMatchException`, or `MethodNotAllowedException` when only the method differs (`RouteRepository::findAllowedMethods()`).
 2. The matched route's handler and middlewares are resolved. A callable is wrapped in `CallableRequestHandler` or `CallableMiddleware`. A class name is fetched from the container.
 3. `MiddlewareStackFactory` builds a `MiddlewareStack`. Route parameters are added as request attributes, and the stack handles the request.
 4. Any `Throwable` goes to the handler from `withErrorHandler()`. Without one, the exception is rethrown.

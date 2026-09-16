@@ -8,12 +8,9 @@ use Mockery\Adapter\Phpunit\MockeryTestCase;
 use TheApp\Components\Repositories\RouteRepository;
 use TheApp\Factories\RequestHandlerFactory;
 use TheApp\Components\Router;
-use TheApp\Exceptions\InvalidConfigException;
+use TheApp\Exceptions\MethodNotAllowedException;
 use TheApp\Exceptions\NoRouteMatchException;
 use Psr\Http\Message\ServerRequestInterface;
-use TheApp\Interfaces\RouteHandlerInterface;
-use TheApp\Structures\Route;
-use TheApp\Structures\RouteMatchResult;
 
 class RouterTest extends MockeryTestCase
 {
@@ -43,11 +40,32 @@ class RouterTest extends MockeryTestCase
     public function testGetRouteHandlerNoMatch()
     {
         $this->repository->shouldReceive('matchRoute')->andReturn(null);
-
-        $this->expectException(NoRouteMatchException::class);
+        $this->repository->shouldReceive('findAllowedMethods')->andReturn([]);
 
         $request = Mockery::mock(ServerRequestInterface::class);
-        $this->router->getRouteHandler($request);
+
+        try {
+            $this->router->getRouteHandler($request);
+            $this->fail('Expected NoRouteMatchException');
+        } catch (NoRouteMatchException $exception) {
+            $this->assertNotInstanceOf(MethodNotAllowedException::class, $exception);
+        }
+    }
+
+    public function testGetRouteHandlerMethodNotAllowed()
+    {
+        $this->repository->shouldReceive('matchRoute')->andReturn(null);
+        $this->repository->shouldReceive('findAllowedMethods')->andReturn(['GET', 'HEAD']);
+
+        $request = Mockery::mock(ServerRequestInterface::class);
+
+        try {
+            $this->router->getRouteHandler($request);
+            $this->fail('Expected MethodNotAllowedException');
+        } catch (MethodNotAllowedException $exception) {
+            $this->assertInstanceOf(NoRouteMatchException::class, $exception);
+            $this->assertSame(['GET', 'HEAD'], $exception->getAllowedMethods());
+        }
     }
 
     public function testMethodHelpersRegisterRoutesForTheirMethod()

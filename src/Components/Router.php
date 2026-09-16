@@ -8,6 +8,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use TheApp\Components\Repositories\RouteRepository;
 use TheApp\Factories\RequestHandlerFactory;
 use TheApp\Exceptions\InvalidConfigException;
+use TheApp\Exceptions\MethodNotAllowedException;
 use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Interfaces\RouteHandlerInterface;
 use TheApp\Interfaces\RouterInterface;
@@ -43,12 +44,18 @@ class Router implements RouterInterface
     }
 
     /**
+     * @throws MethodNotAllowedException When a route matches the path but not the method
      * @throws NoRouteMatchException|InvalidConfigException
      */
     public function getRouteHandler(ServerRequestInterface $request): RouteHandlerInterface
     {
         $matchResult = $this->repository->matchRoute($request);
         if (!$matchResult) {
+            $allowedMethods = $this->repository->findAllowedMethods($request);
+            if ($allowedMethods) {
+                throw new MethodNotAllowedException($allowedMethods);
+            }
+
             throw new NoRouteMatchException('No route match');
         }
 
