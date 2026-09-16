@@ -7,7 +7,7 @@ TheApp (`rkistaps/the-app`) is a small PHP micro-framework library. It routes PS
 - PHP `^8.3`
 - PHP-DI 6 for the container and autowiring (`DI\Container`, `$container->call()`)
 - PSR-7 / PSR-15 / PSR-17 interfaces only. The repo ships no concrete request/response implementation, so consumers bind one. For example, `ResponseBuilder` needs a `Psr\Http\Message\ResponseFactoryInterface` in the container.
-- `samejack/php-argv` for CLI argument parsing. The framework registers no global error handlers (`filp/whoops` is only suggested for development)
+- No other runtime dependencies. Console arguments are parsed by the package's own `ConsoleInputParser`, and the framework registers no global error handlers (`filp/whoops` is only suggested for development)
 - Tests: PHPUnit 12 + Mockery
 - Static analysis: PHPStan 2 at level 8
 
@@ -71,7 +71,7 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 - A path starting with `@` is a raw regex, with the `@` stripped.
 - `[type:name]` defines a parameter, and a trailing `?` makes it optional. The types are `i` (int), `a` (alphanumeric), `h` (hex), `*`, `**`, and empty (a single segment).
 
-**Console.** `ConsoleApp::run($argv)` reads the `command` argument, looks it up in `CommandRunner`, and passes the remaining arguments to the handler's `handle(array $params)`.
+**Console.** `ConsoleApp::run(array $argv): int` parses `$argv` with `ConsoleInputParser` (index 0 is the script name; the command is the first positional argument or `--command=`; options are `--name=value` or `--flag`). It looks the command up in `CommandRunner` and returns an exit code. `CallableCommandHandler` converts option values to the callable's scalar parameter types and throws `InvalidCommandInputException` for missing or invalid options, which `ConsoleApp` prints. Class handlers get the raw options in `handle(array $params)`.
 
 ## Conventions
 

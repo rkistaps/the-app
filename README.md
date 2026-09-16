@@ -294,8 +294,8 @@ Commands are registered by *command configurators*, which are classes implementi
 
 A command handler is either a callable or a class name:
 
-- **Callable:** command-line options are matched to its parameters by name. Parameters not passed on the command line use their default value, or are resolved from the container by type.
-- **Class name:** the class must implement `CommandHandlerInterface`, and its `handle()` method receives all options as an array.
+- **Callable:** command-line options are matched to its parameters by name and converted to the parameter's type. Parameters not passed on the command line use their default value, or are resolved from the container if they have a class type.
+- **Class name:** the class must implement `CommandHandlerInterface`, and its `handle()` method receives all options as an array of strings. A flag without a value is `true`.
 
 ```php
 namespace Acme\Console;
@@ -345,25 +345,36 @@ require __DIR__ . '/vendor/autoload.php';
 
 $container = (new ContainerBuilder())->build();
 
-AppFactory::consoleAppFromContainer($container)
+$exitCode = AppFactory::consoleAppFromContainer($container)
     ->withCommandConfigurators([
         UserCommands::class,
     ])
     ->run($argv);
+
+exit($exitCode);
 ```
 
 `withCommandConfigurators()` works like `withRouterConfigurators()`. It takes class names or instances, returns a new app, and accepts an array loaded from a file, such as `require __DIR__ . '/commands.php'`.
 
-Choose the command with `--command`, and pass the other options as `--name=value`:
+Pass the command name first, then options as `--name=value`, or `--name` alone for a flag:
 
 ```bash
-php console.php --command=user/greet --name=World --times=2
-php console.php --command=user/import --file=export.csv
+php console.php user/greet --name=World --times=2
+php console.php user/import --file=export.csv
 ```
 
-If the command name is missing or unknown, the app prints `Command not found`.
+`--command=user/greet` also works in place of the first argument.
 
-Option values arrive as strings, so avoid `bool` parameters: `--force=false` is converted to `true`. Take a string and compare it instead.
+For callable commands, option values are converted to the parameter's type:
+
+| Parameter type | Accepted values |
+| --- | --- |
+| `bool` | `true`, `false`, `1`, `0`, `yes`, `no`, `on`, `off`, or the flag alone (`--save`) for `true` |
+| `int` | Whole numbers, such as `--budget=-10` |
+| `float` | Numbers, such as `--fee=0.002` |
+| `string` | Any value. A flag without a value is rejected |
+
+`run()` returns `0` on success and `1` when the command isn't found or its input is invalid. In the second case, it prints a message such as `Missing required option --name` or `Option --times expects an integer`.
 
 ## Development
 

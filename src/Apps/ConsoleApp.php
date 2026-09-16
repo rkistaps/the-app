@@ -3,15 +3,16 @@
 namespace TheApp\Apps;
 
 use Psr\Container\ContainerInterface;
-use samejack\PHP\ArgvParser;
 use TheApp\Components\CommandRunner;
+use TheApp\Components\ConsoleInputParser;
+use TheApp\Exceptions\InvalidCommandInputException;
 use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Interfaces\CommandConfiguratorInterface;
 
 class ConsoleApp extends App
 {
     private CommandRunner $commandRunner;
-    private ArgvParser $argvParser;
+    private ConsoleInputParser $inputParser;
 
     /** @var array<CommandConfiguratorInterface|string> */
     private array $commandConfigurators = [];
@@ -21,13 +22,13 @@ class ConsoleApp extends App
 
     public function __construct(
         CommandRunner $commandRunner,
-        ArgvParser $argvParser,
+        ConsoleInputParser $inputParser,
         ContainerInterface $container
     ) {
         parent::__construct($container);
 
         $this->commandRunner = $commandRunner;
-        $this->argvParser = $argvParser;
+        $this->inputParser = $inputParser;
     }
 
     public function __clone()
@@ -50,25 +51,31 @@ class ConsoleApp extends App
     }
 
     /**
-     * @param array|string $argv
+     * Run the command named by the arguments, such as ['console.php', 'user/greet', '--name=World']
+     *
+     * @param string[] $argv Arguments as in PHP's $argv, where the first element is the script name
+     * @return int Exit code: 0 on success, 1 when the command isn't found or its input is invalid
      * @throws InvalidConfigException
      */
-    public function run($argv)
+    public function run(array $argv): int
     {
         $commandRunner = $this->getCommandRunner();
 
-        $params = $this->argvParser->parseConfigs($argv);
-        $commandName = $params['command'] ?? null;
-        // A missing or valueless --command argument is not a string
-        $command = is_string($commandName) ? $commandRunner->findCommandByName($commandName) : null;
-        if (!$command) {
-            echo 'Command not found' . PHP_EOL;
-            return;
+        try {
+            $input = $this->inputParser->parse($argv);
+            $command = $input->command !== null ? $commandRunner->findCommandByName($input->command) : null;
+            if (!$command) {
+                echo 'Command not found' . PHP_EOL;
+                return 1;
+            }
+
+            $commandRunner->runCommand($command, $input->options);
+        } catch (InvalidCommandInputException $exception) {
+            echo $exception->getMessage() . PHP_EOL;
+            return 1;
         }
 
-        unset($params['command']);
-
-        $commandRunner->runCommand($command, $params);
+        return 0;
     }
 
     /**

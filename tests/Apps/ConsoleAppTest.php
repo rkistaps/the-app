@@ -4,10 +4,10 @@ namespace TheApp\Tests\Apps;
 
 use DI\Container;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
-use samejack\PHP\ArgvParser;
 use stdClass;
 use TheApp\Apps\ConsoleApp;
 use TheApp\Components\CommandRunner;
+use TheApp\Components\ConsoleInputParser;
 use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Factories\CommandHandlerFactory;
 use TheApp\Interfaces\CommandConfiguratorInterface;
@@ -22,19 +22,43 @@ class ConsoleAppTest extends MockeryTestCase
         $this->container = new Container();
         $commandRunner = new CommandRunner($this->container, new CommandHandlerFactory($this->container));
 
-        $this->app = new ConsoleApp($commandRunner, new ArgvParser(), $this->container);
+        $this->app = new ConsoleApp($commandRunner, new ConsoleInputParser(), $this->container);
     }
 
-    public function testRunWithoutCommandArgument()
+    public function testRunWithoutCommand()
     {
         $this->expectOutputString('Command not found' . PHP_EOL);
-        $this->app->run([]);
+        $this->assertSame(1, $this->app->run(['console.php']));
     }
 
-    public function testRunWithValuelessCommandArgument()
+    public function testRunWithValuelessCommandOption()
     {
         $this->expectOutputString('Command not found' . PHP_EOL);
-        $this->app->run(['--command']);
+        $this->assertSame(1, $this->app->run(['console.php', '--command']));
+    }
+
+    public function testRunCommandFromFirstArgument()
+    {
+        $app = $this->app->withCommandConfigurators([$this->configurator('hello')]);
+
+        $this->expectOutputString('hello World' . PHP_EOL);
+        $this->assertSame(0, $app->run(['console.php', 'hello', '--name=World']));
+    }
+
+    public function testRunCommandFromCommandOption()
+    {
+        $app = $this->app->withCommandConfigurators([$this->configurator('hello')]);
+
+        $this->expectOutputString('hello World' . PHP_EOL);
+        $this->assertSame(0, $app->run(['console.php', '--command=hello', '--name=World']));
+    }
+
+    public function testInvalidInputPrintsMessageAndFails()
+    {
+        $app = $this->app->withCommandConfigurators([$this->configurator('hello')]);
+
+        $this->expectOutputString('Missing required option --name' . PHP_EOL);
+        $this->assertSame(1, $app->run(['console.php', 'hello']));
     }
 
     public function testWithCommandConfiguratorsAcceptsInstancesAndClassNames()
@@ -47,8 +71,8 @@ class ConsoleAppTest extends MockeryTestCase
         ]);
 
         $this->expectOutputString('hello World' . PHP_EOL . 'greet World' . PHP_EOL);
-        $app->run(['--command=hello', '--name=World']);
-        $app->run(['--command=greet', '--name=World']);
+        $app->run(['console.php', 'hello', '--name=World']);
+        $app->run(['console.php', 'greet', '--name=World']);
     }
 
     public function testWithCommandConfiguratorsReturnsNewApp()
@@ -58,8 +82,8 @@ class ConsoleAppTest extends MockeryTestCase
         $this->assertNotSame($this->app, $app);
 
         $this->expectOutputString('Command not found' . PHP_EOL . 'hello World' . PHP_EOL);
-        $this->app->run(['--command=hello', '--name=World']);
-        $app->run(['--command=hello', '--name=World']);
+        $this->app->run(['console.php', 'hello', '--name=World']);
+        $app->run(['console.php', 'hello', '--name=World']);
     }
 
     public function testInvalidConfiguratorThrows()
@@ -68,7 +92,7 @@ class ConsoleAppTest extends MockeryTestCase
         $app = $this->app->withCommandConfigurators(['notAConfigurator']);
 
         $this->expectException(InvalidConfigException::class);
-        $app->run(['--command=hello']);
+        $app->run(['console.php', 'hello']);
     }
 
     private function configurator(string $commandName): CommandConfiguratorInterface

@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Method TheApp\\Apps\\ConsoleApp\:\:run\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Apps/ConsoleApp.php
-
-		-
 			message: '#^Method TheApp\\Components\\CallableCommandHandler\:\:handle\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
