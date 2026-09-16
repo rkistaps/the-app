@@ -199,7 +199,7 @@ $router->get('/admin', AdminHandler::class)
 
 ### Error handling
 
-`WebApp::run()` catches every exception, including `TheApp\Exceptions\NoRouteMatchException` when no route matches. It passes the exception to the handler set with `withErrorHandler()`, as shown in the [front controller](#2-front-controller). Without one, the exception is rethrown and [Whoops](https://github.com/filp/whoops) shows its debug page. That's useful in development, but set an error handler for production.
+`WebApp::run()` catches every exception, including `TheApp\Exceptions\NoRouteMatchException` when no route matches. It passes the exception to the handler set with `withErrorHandler()`, as shown in the [front controller](#2-front-controller). Without one, the exception is rethrown from `run()`. TheApp doesn't register any global error or exception handlers.
 
 ```php
 namespace Acme\Errors;
@@ -225,6 +225,16 @@ final class ErrorHandler implements ErrorHandlerInterface
 
         return $response;
     }
+}
+```
+
+For a debug page during development, install [Whoops](https://github.com/filp/whoops) with `composer require --dev filp/whoops`. Then register it in the front controller only in development, and skip `withErrorHandler()` so exceptions reach it:
+
+```php
+if ($isDevelopment) {
+    $whoops = new \Whoops\Run();
+    $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler());
+    $whoops->register();
 }
 ```
 

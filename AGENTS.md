@@ -7,7 +7,7 @@ TheApp (`rkistaps/the-app`) is a small PHP micro-framework library. It routes PS
 - PHP `^8.3`
 - PHP-DI 6 for the container and autowiring (`DI\Container`, `$container->call()`)
 - PSR-7 / PSR-15 / PSR-17 interfaces only. The repo ships no concrete request/response implementation, so consumers bind one. For example, `ResponseBuilder` needs a `Psr\Http\Message\ResponseFactoryInterface` in the container.
-- `filp/whoops` for error pages, `samejack/php-argv` for CLI argument parsing
+- `samejack/php-argv` for CLI argument parsing. The framework registers no global error handlers (`filp/whoops` is only suggested for development)
 - Tests: PHPUnit 12 + Mockery
 - Static analysis: PHPStan 2 at level 8
 
@@ -59,11 +59,10 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 
 **Web request flow.** `AppFactory::webAppFromContainer()` returns a `WebApp`. `WebApp::run($request, ?$router)` then does the following:
 
-1. It registers Whoops.
-2. It uses the router passed in, or builds one from the configurators. `Router::getRouteHandler()` asks `RouteRepository::matchRoute()` for a match. If nothing matches, it throws `NoRouteMatchException`.
-3. The matched route's handler and middlewares are resolved. A callable is wrapped in `CallableRequestHandler` or `CallableMiddleware`. A class name is fetched from the container.
-4. `MiddlewareStackFactory` builds a `MiddlewareStack`. Route parameters are added as request attributes, and the stack handles the request.
-5. Any `Throwable` goes to the handler from `withErrorHandler()`. Without one, the exception is rethrown.
+1. It uses the router passed in, or builds one from the configurators. `Router::getRouteHandler()` asks `RouteRepository::matchRoute()` for a match. If nothing matches, it throws `NoRouteMatchException`.
+2. The matched route's handler and middlewares are resolved. A callable is wrapped in `CallableRequestHandler` or `CallableMiddleware`. A class name is fetched from the container.
+3. `MiddlewareStackFactory` builds a `MiddlewareStack`. Route parameters are added as request attributes, and the stack handles the request.
+4. Any `Throwable` goes to the handler from `withErrorHandler()`. Without one, the exception is rethrown.
 
 `HttpResponseEmitter` sends the resulting response.
 

@@ -14,8 +14,6 @@ use TheApp\Interfaces\ErrorHandlerInterface;
 use TheApp\Interfaces\RouterConfiguratorInterface;
 use TheApp\Interfaces\RouterInterface;
 use Throwable;
-use Whoops\Handler\PrettyPageHandler;
-use Whoops\Run;
 
 /**
  * Class WebApp
@@ -89,8 +87,6 @@ class WebApp extends App
         ?RouterInterface $router = null
     ): ResponseInterface {
         try {
-            $this->bootstrapApp();
-
             $router ??= $this->getRouter();
             $handler = $router->getRouteHandler($request);
             $stack = $this->stackFactory->buildFromRouteHandler($handler);
@@ -105,13 +101,6 @@ class WebApp extends App
         }
 
         return $response;
-    }
-
-    protected function bootstrapApp()
-    {
-        $whoops = new Run();
-        $whoops->prependHandler(new PrettyPageHandler());
-        $whoops->register();
     }
 
     /**

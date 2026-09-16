@@ -29,16 +29,20 @@ class WebAppTest extends MockeryTestCase
         $this->container = new Container();
         $this->response = Mockery::mock(ResponseInterface::class);
 
-        // Skip registering Whoops, which would leave global error handlers behind
-        $this->app = new class (
-            $this->container,
-            new MiddlewareStackFactory(),
-            new RequestHandlerFactory($this->container)
-        ) extends WebApp {
-            protected function bootstrapApp()
-            {
-            }
-        };
+        $this->app = new WebApp($this->container, new MiddlewareStackFactory(), new RequestHandlerFactory($this->container));
+    }
+
+    public function testRunRegistersNoGlobalErrorHandlers()
+    {
+        $app = $this->app->withRouterConfigurators([$this->configurator('/hello', $this->response)]);
+
+        $errorHandler = $this->currentErrorHandler();
+        $exceptionHandler = $this->currentExceptionHandler();
+
+        $app->run($this->request('/hello'));
+
+        $this->assertSame($errorHandler, $this->currentErrorHandler());
+        $this->assertSame($exceptionHandler, $this->currentExceptionHandler());
     }
 
     public function testWithRouterConfiguratorsAcceptsInstancesAndClassNames()
@@ -101,6 +105,22 @@ class WebAppTest extends MockeryTestCase
                 $router->get($this->path, fn() => $this->response);
             }
         };
+    }
+
+    private function currentErrorHandler(): mixed
+    {
+        $handler = set_error_handler(fn() => false);
+        restore_error_handler();
+
+        return $handler;
+    }
+
+    private function currentExceptionHandler(): mixed
+    {
+        $handler = set_exception_handler(null);
+        restore_exception_handler();
+
+        return $handler;
     }
 
     private function request(string $path): ServerRequestInterface
