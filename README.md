@@ -18,6 +18,7 @@ It's built on [PHP-DI](https://php-di.org/), so handlers, middleware and command
   - [Building responses](#building-responses)
 - [Console application](#console-application)
 - [Development](#development)
+- [License](#license)
 
 ## Requirements
 
