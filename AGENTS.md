@@ -24,7 +24,7 @@ PHP isn't installed on the host. Everything runs in the `theapp_workspace` Docke
 ./docker-run ./vendor/bin/phpstan analyse
 ```
 
-There's no `phpunit.xml` or linter. `package.json` is a leftover stub and isn't used. Docker and other dev-only files are excluded from the Composer package through `export-ignore` in `.gitattributes`. Add any new dev-only root file there too.
+There's no `phpunit.xml` or linter. Docker and other dev-only files are excluded from the Composer package through `export-ignore` in `.gitattributes`. Add any new dev-only root file there too.
 
 ## PHPStan rules
 
