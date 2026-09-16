@@ -13,6 +13,7 @@ It's built on [PHP-DI](https://php-di.org/), so handlers, middleware and command
   - [Routes](#1-routes)
   - [Front controller](#2-front-controller)
   - [Route paths](#route-paths)
+  - [Generating URLs](#generating-urls)
   - [Middleware](#middleware)
   - [Error handling](#error-handling)
   - [Building responses](#building-responses)
@@ -176,6 +177,25 @@ public function configureRouter(Router $router): void
     $api->get('/users', UserListHandler::class); // matches /api/users
 }
 ```
+
+### Generating URLs
+
+Give a route a name as the last argument, then build its path with `Router::url()`. The router is available to handlers and middleware as the `Router::class` request attribute.
+
+```php
+$router->get('/users/[i:id]/[:tab]?', UserHandler::class, 'user');
+
+// In a handler
+$router = $request->getAttribute(Router::class);
+$router->url('user', ['id' => 42]);                   // /users/42
+$router->url('user', ['id' => 42, 'tab' => 'posts']); // /users/42/posts
+```
+
+Values are URL-encoded, and optional parameters you leave out are dropped. `url()` throws `InvalidArgumentException` in these cases:
+- no route has that name
+- a required parameter is missing
+- a value doesn't fit its parameter type (for example, `abc` for `[i:id]`)
+- the route's path is `*` or an `@` regex
 
 ### Middleware
 

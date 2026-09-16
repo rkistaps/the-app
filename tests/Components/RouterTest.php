@@ -3,6 +3,7 @@
 namespace TheApp\Tests\Components;
 
 use DI\Container;
+use InvalidArgumentException;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 use TheApp\Components\Repositories\RouteRepository;
@@ -11,6 +12,7 @@ use TheApp\Components\Router;
 use TheApp\Exceptions\MethodNotAllowedException;
 use TheApp\Exceptions\NoRouteMatchException;
 use Psr\Http\Message\ServerRequestInterface;
+use TheApp\Structures\Route;
 
 class RouterTest extends MockeryTestCase
 {
@@ -66,6 +68,25 @@ class RouterTest extends MockeryTestCase
             $this->assertInstanceOf(NoRouteMatchException::class, $exception);
             $this->assertSame(['GET', 'HEAD'], $exception->getAllowedMethods());
         }
+    }
+
+    public function testUrlBuildsPathOfNamedRoute()
+    {
+        $route = new Route();
+        $this->repository->shouldReceive('findRouteByName')->with('user')->andReturn($route);
+        $this->repository->shouldReceive('buildPath')->with($route, ['id' => 5])->andReturn('/users/5');
+
+        $this->assertSame('/users/5', $this->router->url('user', ['id' => 5]));
+    }
+
+    public function testUrlThrowsForUnknownName()
+    {
+        $this->repository->shouldReceive('findRouteByName')->andReturn(null);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('No route named "missing"');
+
+        $this->router->url('missing');
     }
 
     public function testMethodHelpersRegisterRoutesForTheirMethod()

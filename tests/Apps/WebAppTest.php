@@ -5,6 +5,7 @@ namespace TheApp\Tests\Apps;
 use DI\Container;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
+use Mockery\MockInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
@@ -43,6 +44,16 @@ class WebAppTest extends MockeryTestCase
 
         $this->assertSame($errorHandler, $this->currentErrorHandler());
         $this->assertSame($exceptionHandler, $this->currentExceptionHandler());
+    }
+
+    public function testRouterIsPassedToHandlersAsRequestAttribute()
+    {
+        $app = $this->app->withRouterConfigurators([$this->configurator('/hello', $this->response)]);
+
+        $request = $this->request('/hello');
+        $request->shouldReceive('withAttribute')->once()->with(Router::class, Mockery::type(Router::class))->andReturnSelf();
+
+        $this->assertSame($this->response, $app->run($request));
     }
 
     public function testWithRouterConfiguratorsAcceptsInstancesAndClassNames()
@@ -123,7 +134,7 @@ class WebAppTest extends MockeryTestCase
         return $handler;
     }
 
-    private function request(string $path): ServerRequestInterface
+    private function request(string $path): ServerRequestInterface&MockInterface
     {
         $uri = Mockery::mock(UriInterface::class);
         $uri->shouldReceive('getPath')->andReturn($path);
@@ -131,6 +142,7 @@ class WebAppTest extends MockeryTestCase
         $request = Mockery::mock(ServerRequestInterface::class);
         $request->shouldReceive('getUri')->andReturn($uri);
         $request->shouldReceive('getMethod')->andReturn('GET');
+        $request->shouldReceive('withAttribute')->andReturnSelf()->byDefault();
 
         return $request;
     }

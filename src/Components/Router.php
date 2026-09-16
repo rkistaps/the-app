@@ -3,6 +3,7 @@
 namespace TheApp\Components;
 
 use DI\Container;
+use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TheApp\Components\Repositories\RouteRepository;
@@ -60,6 +61,22 @@ class Router implements RouterInterface
         }
 
         return $this->initializeRoute($matchResult);
+    }
+
+    /**
+     * Build the path of a named route, such as url('user', ['id' => 5]) for "/users/[i:id]"
+     *
+     * @param array<string, string|int> $parameters
+     * @throws InvalidArgumentException When no route has the name, or the parameters don't fit the route
+     */
+    public function url(string $name, array $parameters = []): string
+    {
+        $route = $this->repository->findRouteByName($name);
+        if (!$route) {
+            throw new InvalidArgumentException(sprintf('No route named "%s"', $name));
+        }
+
+        return $this->repository->buildPath($route, $parameters);
     }
 
     protected function initializeRoute(RouteMatchResult $matchResult): RouteHandlerInterface

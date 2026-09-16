@@ -91,6 +91,11 @@ class WebApp extends App
             $handler = $router->getRouteHandler($request);
             $stack = $this->stackFactory->buildFromRouteHandler($handler);
 
+            // Lets handlers build URLs with $request->getAttribute(Router::class)->url()
+            if ($router instanceof Router) {
+                $request = $request->withAttribute(Router::class, $router);
+            }
+
             foreach ($handler->getAttributes() as $name => $value) {
                 $request = $request->withAttribute($name, $value);
             }
