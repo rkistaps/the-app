@@ -9,16 +9,8 @@ use TheApp\Exceptions\InvalidConfigException;
 
 abstract class App
 {
-    private static ContainerInterface $staticContainer;
-
     public function __construct(protected ContainerInterface $container)
     {
-        self::$staticContainer = $container;
-    }
-
-    public static function getContainer(): ContainerInterface
-    {
-        return self::$staticContainer;
     }
 
     /**
