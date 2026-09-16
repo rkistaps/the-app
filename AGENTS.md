@@ -8,7 +8,7 @@ TheApp (`rkistaps/the-app`) is a small PHP micro-framework library. It routes PS
 - PHP-DI 6 for the container and autowiring (`DI\Container`, `$container->call()`)
 - PSR-7 / PSR-15 / PSR-17 interfaces only. The repo ships no concrete request/response implementation, so consumers bind one. For example, `ResponseBuilder` needs a `Psr\Http\Message\ResponseFactoryInterface` in the container.
 - `filp/whoops` for error pages, `rappasoft/laravel-helpers` for `array_get()` and similar helpers, `samejack/php-argv` for CLI argument parsing
-- Tests: PHPUnit 11 + Mockery
+- Tests: PHPUnit 12 + Mockery
 - Static analysis: PHPStan 2 at level 8
 
 ## Commands
