@@ -9,10 +9,10 @@ class Container
 {
     /**
      * @template T of object
-     * @param string|class-string<T> $name
-     * @return ($name is class-string<T> ? T : mixed)
+     * @param string|class-string<T> $id
+     * @return ($id is class-string<T> ? T : mixed)
      */
-    public function get($name) {}
+    public function get(string $id): mixed {}
 
     /**
      * @template T of object
@@ -20,7 +20,7 @@ class Container
      * @param array<array-key, mixed> $parameters
      * @return ($name is class-string<T> ? T : mixed)
      */
-    public function make($name, array $parameters = []) {}
+    public function make(string $name, array $parameters = []): mixed {}
 }
 
 interface FactoryInterface
@@ -31,5 +31,5 @@ interface FactoryInterface
      * @param array<array-key, mixed> $parameters
      * @return ($name is class-string<T> ? T : mixed)
      */
-    public function make($name, array $parameters = []);
+    public function make(string $name, array $parameters = []): mixed;
 }
