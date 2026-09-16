@@ -8,6 +8,9 @@ use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Interfaces\CommandHandlerInterface;
 use TheApp\Structures\Command;
 
+/**
+ * @internal Internal to TheApp, not covered by the backwards-compatibility promise.
+ */
 class CommandHandlerFactory
 {
     private Container $container;

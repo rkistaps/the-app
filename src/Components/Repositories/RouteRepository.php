@@ -7,6 +7,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use TheApp\Structures\Route;
 use TheApp\Structures\RouteMatchResult;
 
+/**
+ * @internal Internal to TheApp, not covered by the backwards-compatibility promise.
+ */
 class RouteRepository
 {
     /** Matches a path parameter block, such as "/[i:id]?": prefix, type, name and optional marker */

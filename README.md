@@ -18,6 +18,7 @@ It's built on [PHP-DI](https://php-di.org/), so handlers, middleware and command
   - [Error handling](#error-handling)
   - [Building responses](#building-responses)
 - [Console application](#console-application)
+- [Versioning and support](#versioning-and-support)
 - [Development](#development)
 - [License](#license)
 
@@ -375,6 +376,18 @@ For callable commands, option values are converted to the parameter's type:
 | `string` | Any value. A flag without a value is rejected |
 
 `run()` returns `0` on success and `1` when the command isn't found or its input is invalid. In the second case, it prints a message such as `Missing required option --name` or `Option --times expects an integer`.
+
+## Versioning and support
+
+TheApp follows [semantic versioning](https://semver.org/). From 1.0, minor and patch releases don't break the public API. The public API is every class, interface and method in `TheApp\` except those marked `@internal`. Internal classes, such as `RouteRepository`, `MiddlewareStack` and the `Callable*` adapters, can change in any release.
+
+Before 1.0, minor releases (0.x) may contain breaking changes, which are listed in the changelog.
+
+Supported versions:
+- **PHP:** 8.3, 8.4 and 8.5. Support for a PHP version is dropped only in a major release, and only once that PHP version no longer receives security fixes.
+- **TheApp:** the latest release receives bug and security fixes.
+
+To report a security vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## Development
 

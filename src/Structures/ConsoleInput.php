@@ -4,6 +4,8 @@ namespace TheApp\Structures;
 
 /**
  * Parsed command-line input
+ *
+ * @internal Internal to TheApp, not covered by the backwards-compatibility promise.
  */
 class ConsoleInput
 {

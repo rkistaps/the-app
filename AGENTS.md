@@ -5,7 +5,7 @@ TheApp (`rkistaps/the-app`) is a small PHP micro-framework library. It routes PS
 ## Stack
 
 - PHP `^8.3`
-- PHP-DI 7 for the container and autowiring (`DI\Container`, `$container->call()`). `php-di/invoker` is required directly at `^2.1`, because PHP-DI 7 still allows invoker 2.0, which calls a reflection method deprecated since PHP 8
+- PHP-DI 7 for the container and autowiring (`DI\Container`, `$container->call()`). `php-di/invoker` is required directly at `^2.2`, because PHP-DI 7 still allows older invoker releases that trigger deprecations on PHP 8+ (`ReflectionParameter::getClass()` before 2.1, implicitly nullable parameters on PHP 8.4+ before 2.2)
 - PSR-7 / PSR-15 / PSR-17 interfaces only, with `psr/http-message` 1.x or 2.x. The repo ships no concrete request/response implementation, so consumers bind one. For example, `ResponseBuilder` needs a `Psr\Http\Message\ResponseFactoryInterface` in the container.
 - No other runtime dependencies. Console arguments are parsed by the package's own `ConsoleInputParser`, and the framework registers no global error handlers (`filp/whoops` is only suggested for development)
 - Tests: PHPUnit 12 + Mockery
@@ -81,4 +81,5 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 - `Router::withBasePath()` is immutable and returns a clone. Keep "with" methods immutable.
 - Style is PSR-12. Newer code uses typed properties and constructor property promotion (see `Router`), while older code declares properties explicitly. Match the file you're editing, and prefer typed signatures in new code.
 - Tests extend `Mockery\Adapter\Phpunit\MockeryTestCase`, mock collaborators with `Mockery::mock()`, and use `testMethodName` naming.
+- The public API is everything in `TheApp\` not marked `@internal`, and after 1.0 it only breaks in major releases. Mark new implementation-detail classes `@internal`, and record breaking changes in `CHANGELOG.md`.
 - Keep the package framework-agnostic. Depend on PSR interfaces, not on a specific PSR-7 implementation.

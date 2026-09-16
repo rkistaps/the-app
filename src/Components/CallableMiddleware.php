@@ -7,6 +7,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
+/**
+ * @internal Internal to TheApp, not covered by the backwards-compatibility promise.
+ */
 class CallableMiddleware implements \Psr\Http\Server\MiddlewareInterface
 {
     /**

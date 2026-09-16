@@ -7,6 +7,8 @@ use Psr\Container\ContainerInterface;
 /**
  * Class CallableFactory
  * @package TheApp\Factories
+ *
+ * @internal Internal to TheApp, not covered by the backwards-compatibility promise.
  */
 class CallableFactory
 {

@@ -6,6 +6,9 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TheApp\Interfaces\RouteHandlerInterface;
 
+/**
+ * @internal Internal to TheApp, not covered by the backwards-compatibility promise.
+ */
 class RouteHandler implements RouteHandlerInterface
 {
     private RequestHandlerInterface $handler;

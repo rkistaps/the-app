@@ -8,6 +8,9 @@ use TheApp\Components\CallableRequestHandler;
 use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Structures\Route;
 
+/**
+ * @internal Internal to TheApp, not covered by the backwards-compatibility promise.
+ */
 class RequestHandlerFactory
 {
     private Container $container;

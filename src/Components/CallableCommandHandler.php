@@ -12,6 +12,8 @@ use TheApp\Interfaces\CommandHandlerInterface;
 /**
  * Runs a callable command. Options are matched to the callable's parameters by name and converted to the
  * parameter's type. Parameters without a matching option get their default value or are resolved from the container.
+ *
+ * @internal Internal to TheApp, not covered by the backwards-compatibility promise.
  */
 class CallableCommandHandler implements CommandHandlerInterface
 {

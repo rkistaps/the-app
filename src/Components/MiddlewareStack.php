@@ -7,6 +7,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
+/**
+ * @internal Internal to TheApp, not covered by the backwards-compatibility promise.
+ */
 class MiddlewareStack implements RequestHandlerInterface
 {
     /** @var MiddlewareInterface[] */

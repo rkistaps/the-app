@@ -7,6 +7,8 @@ use TheApp\Structures\ConsoleInput;
 
 /**
  * Parses command-line arguments, such as: console.php user/greet --name=World --verbose
+ *
+ * @internal Internal to TheApp, not covered by the backwards-compatibility promise.
  */
 class ConsoleInputParser
 {
