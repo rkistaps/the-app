@@ -6,7 +6,7 @@ TheApp (`rkistaps/the-app`) is a small PHP micro-framework library. It routes PS
 
 - PHP `^8.3`
 - PHP-DI 7 for the container and autowiring (`DI\Container`, `$container->call()`). `php-di/invoker` is required directly at `^2.1`, because PHP-DI 7 still allows invoker 2.0, which calls a reflection method deprecated since PHP 8
-- PSR-7 / PSR-15 / PSR-17 interfaces only. The repo ships no concrete request/response implementation, so consumers bind one. For example, `ResponseBuilder` needs a `Psr\Http\Message\ResponseFactoryInterface` in the container.
+- PSR-7 / PSR-15 / PSR-17 interfaces only, with `psr/http-message` 1.x or 2.x. The repo ships no concrete request/response implementation, so consumers bind one. For example, `ResponseBuilder` needs a `Psr\Http\Message\ResponseFactoryInterface` in the container.
 - No other runtime dependencies. Console arguments are parsed by the package's own `ConsoleInputParser`, and the framework registers no global error handlers (`filp/whoops` is only suggested for development)
 - Tests: PHPUnit 12 + Mockery
 - Static analysis: PHPStan 2 at level 8

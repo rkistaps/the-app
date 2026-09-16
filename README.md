@@ -24,7 +24,7 @@ It's built on [PHP-DI](https://php-di.org/), so handlers, middleware and command
 ## Requirements
 
 - PHP 8.3 or later
-- For web applications, a PSR-7 and PSR-17 implementation, such as `nyholm/psr7`
+- For web applications, a PSR-7 and PSR-17 implementation, such as `nyholm/psr7`. Both `psr/http-message` 1.x and 2.x are supported.
 
 ## Installation
 
