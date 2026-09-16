@@ -18,3 +18,4 @@ docker-* text eol=lf
 /phpstan.neon export-ignore
 /phpstan-baseline.neon export-ignore
 /stubs export-ignore
+/phpunit.xml export-ignore

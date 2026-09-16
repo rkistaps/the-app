@@ -110,6 +110,20 @@ class HttpResponseEmitterTest extends MockeryTestCase
         (new HttpResponseEmitter(4))->emit($response);
     }
 
+    public function testUnreadableBodyIsEmittedAsString()
+    {
+        $stream = Mockery::mock(StreamInterface::class);
+        $stream->shouldReceive('isSeekable')->andReturn(false);
+        $stream->shouldReceive('isReadable')->andReturn(false);
+        $stream->shouldReceive('__toString')->andReturn('content');
+
+        $response = $this->response(200, 'OK', [], null);
+        $response->shouldReceive('getBody')->andReturn($stream);
+
+        $this->expectOutputString('content');
+        (new HttpResponseEmitter())->emit($response);
+    }
+
     public function testNoBodyForNoContentAndNotModified()
     {
         foreach ([204, 304] as $status) {

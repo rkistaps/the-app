@@ -6,6 +6,7 @@ use Mockery;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 use TheApp\Components\Builders\ResponseBuilder;
 
 class ResponseBuilderTest extends MockeryTestCase
@@ -25,5 +26,19 @@ class ResponseBuilderTest extends MockeryTestCase
         $response = (new ResponseBuilder($factory))->withRedirect('/login', 302)->build();
 
         $this->assertSame($withHeader, $response);
+    }
+
+    public function testWithContentWritesToBody()
+    {
+        $body = Mockery::mock(StreamInterface::class);
+        $body->shouldReceive('write')->once()->with('{"status":"ok"}')->andReturn(15);
+
+        $response = Mockery::mock(ResponseInterface::class);
+        $response->shouldReceive('getBody')->andReturn($body);
+
+        $factory = Mockery::mock(ResponseFactoryInterface::class);
+        $factory->shouldReceive('createResponse')->andReturn($response);
+
+        $this->assertSame($response, (new ResponseBuilder($factory))->withContent('{"status":"ok"}')->build());
     }
 }

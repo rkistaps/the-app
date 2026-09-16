@@ -32,6 +32,32 @@ class RouteTest extends MockeryTestCase
         }
     }
 
+    public function testPathKinds()
+    {
+        $route = $this->route([Route::METHOD_GET]);
+
+        $route->path = '*';
+        $this->assertTrue($route->isForAnyPath());
+        $this->assertFalse($route->isCustomPath());
+
+        $route->path = '@^/legacy$';
+        $this->assertTrue($route->isCustomPath());
+        $this->assertFalse($route->hasParameters());
+
+        $route->path = '/users/[i:id]';
+        $this->assertFalse($route->isForAnyPath());
+        $this->assertTrue($route->hasParameters());
+    }
+
+    public function testWithMiddlewareAppendsAndReturnsRoute()
+    {
+        $route = $this->route([Route::METHOD_GET]);
+        $callable = fn() => null;
+
+        $this->assertSame($route, $route->withMiddleware('Auth')->withMiddleware($callable));
+        $this->assertSame(['Auth', $callable], $route->middlewares);
+    }
+
     /**
      * @param string[] $methods
      */

@@ -62,6 +62,18 @@ class CallableCommandHandlerTest extends MockeryTestCase
         $this->assertSame([$service, 'World'], $received);
     }
 
+    public function testUntypedAndNonScalarParametersReceiveRawValue()
+    {
+        $received = null;
+        $handler = $this->handler(function ($untyped, mixed $mixed, string|int $union = 'default') use (&$received) {
+            $received = [$untyped, $mixed, $union];
+        });
+
+        $handler->handle(['untyped' => 'a', 'mixed' => true, 'union' => '5']);
+
+        $this->assertSame(['a', true, '5'], $received);
+    }
+
     public function testUnknownOptionsAreIgnored()
     {
         $called = false;

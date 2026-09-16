@@ -9,8 +9,11 @@ use Mockery\MockInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use stdClass;
 use TheApp\Apps\WebApp;
+use TheApp\Components\Repositories\RouteRepository;
 use TheApp\Components\Router;
 use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Exceptions\NoRouteMatchException;
@@ -54,6 +57,38 @@ class WebAppTest extends MockeryTestCase
         $request->shouldReceive('withAttribute')->once()->with(Router::class, Mockery::type(Router::class))->andReturnSelf();
 
         $this->assertSame($this->response, $app->run($request));
+    }
+
+    public function testRouteMiddlewareFromContainerAndCallables()
+    {
+        $calls = [];
+        $classMiddleware = Mockery::mock(MiddlewareInterface::class);
+        $classMiddleware->shouldReceive('process')->once()->andReturnUsing(
+            function (ServerRequestInterface $request, RequestHandlerInterface $next) use (&$calls) {
+                $calls[] = 'class';
+                return $next->handle($request);
+            }
+        );
+        $this->container->set('authMiddleware', $classMiddleware);
+
+        $router = new Router(new RouteRepository(), new RequestHandlerFactory($this->container), $this->container);
+        $router->get('/admin', fn() => $this->response)
+            ->withMiddleware('authMiddleware')
+            ->withMiddleware(function (ServerRequestInterface $request, RequestHandlerInterface $next) use (&$calls) {
+                $calls[] = 'callable';
+                return $next->handle($request);
+            });
+
+        $this->assertSame($this->response, $this->app->run($this->request('/admin'), $router));
+        $this->assertSame(['class', 'callable'], $calls);
+    }
+
+    public function testRunUsesRouterPassedIn()
+    {
+        $router = new Router(new RouteRepository(), new RequestHandlerFactory($this->container), $this->container);
+        $router->get('/hello', fn() => $this->response);
+
+        $this->assertSame($this->response, $this->app->run($this->request('/hello'), $router));
     }
 
     public function testWithRouterConfiguratorsAcceptsInstancesAndClassNames()

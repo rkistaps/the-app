@@ -23,8 +23,8 @@ class CommandHandlerFactory
             ? new CallableCommandHandler($command->handler, $this->container)
             : $this->container->get($command->handler);
 
-        if (!is_a($handler, CommandHandlerInterface::class)) {
-            throw new InvalidConfigException(get_class($handler) . ' does not implement ' . CommandHandlerInterface::class);
+        if (!$handler instanceof CommandHandlerInterface) {
+            throw new InvalidConfigException(get_debug_type($handler) . ' does not implement ' . CommandHandlerInterface::class);
         }
 
         return $handler;

@@ -26,7 +26,7 @@ PHP isn't installed on the host. Everything runs in the `theapp_workspace` Docke
 
 CI (`.github/workflows/ci.yml`) runs PHPUnit on PHP 8.3, 8.4 and 8.5 with both the lowest and highest dependency versions allowed by `composer.json`, plus PHPStan. When you change a version constraint, make sure its lowest version actually works.
 
-There's no `phpunit.xml` or linter. Docker and other dev-only files are excluded from the Composer package through `export-ignore` in `.gitattributes`. Add any new dev-only root file there too.
+`phpunit.xml` fails the run on deprecations, warnings and risky tests. A separate CI job measures coverage and fails below 90% line coverage (the HTML report is uploaded as the `coverage-report` artifact). Every public class has direct tests, so keep that true for new ones. There's no linter. Docker and other dev-only files are excluded from the Composer package through `export-ignore` in `.gitattributes`. Add any new dev-only root file there too.
 
 ## PHPStan rules
 

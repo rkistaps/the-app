@@ -19,33 +19,30 @@ class RequestHandlerFactory
     }
 
     /**
-     * @param string $handlerClass
-     * @return RequestHandlerInterface
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException When the class doesn't implement RequestHandlerInterface
      */
     public function getHandlerInstance(string $handlerClass): RequestHandlerInterface
     {
         $instance = $this->container->get($handlerClass);
 
-        if (!is_a($instance, RequestHandlerInterface::class)) {
-            throw new InvalidConfigException();
+        if (!$instance instanceof RequestHandlerInterface) {
+            throw new InvalidConfigException(get_debug_type($instance) . ' does not implement ' . RequestHandlerInterface::class);
         }
 
         return $instance;
     }
 
+    /**
+     * @throws InvalidConfigException When the route's handler class doesn't implement RequestHandlerInterface
+     */
     public function fromRoute(Route $route): RequestHandlerInterface
     {
         return is_callable($route->handler)
-            ? new CallableRequestHandler($route->handler, $this->container)
-            : $this->container->get($route->handler);
+            ? $this->getCallableRequestHandler($route->handler)
+            : $this->getHandlerInstance($route->handler);
     }
 
-    /**
-     * @param callable $callable
-     * @return RequestHandlerInterface
-     */
-    public function getCallableRequestHandler($callable): RequestHandlerInterface
+    public function getCallableRequestHandler(callable $callable): RequestHandlerInterface
     {
         return new CallableRequestHandler($callable, $this->container);
     }

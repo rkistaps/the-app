@@ -35,6 +35,45 @@ jobs:
       - name: Run PHPUnit
         run: vendor/bin/phpunit tests
 
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: pcov
+
+      - uses: ramsey/composer-install@v3
+
+      - name: Run PHPUnit with coverage
+        run: vendor/bin/phpunit --coverage-clover coverage/clover.xml --coverage-html coverage/html --coverage-text=coverage/summary.txt --only-summary-for-coverage-text
+
+      - name: Add coverage to the job summary
+        run: |
+          {
+            echo '### Code coverage'
+            echo '```'
+            cat coverage/summary.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Require at least 90% line coverage
+        run: |
+          php -r '
+            $metrics = simplexml_load_file("coverage/clover.xml")->project->metrics;
+            $percent = 100 * (int) $metrics["coveredstatements"] / max(1, (int) $metrics["statements"]);
+            printf("Line coverage: %.2f%%\n", $percent);
+            exit($percent < 90 ? 1 : 0);
+          '
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/html
+
   static-analysis:
     name: PHPStan
     runs-on: ubuntu-latest

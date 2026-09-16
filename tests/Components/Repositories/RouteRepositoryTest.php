@@ -19,6 +19,55 @@ class RouteRepositoryTest extends MockeryTestCase
         $this->repository = new RouteRepository();
     }
 
+    /**
+     * @return iterable<string, array{string, string, array<string, string>|null}>
+     */
+    public static function paths(): iterable
+    {
+        yield 'exact path' => ['/about', '/about', []];
+        yield 'exact path mismatch' => ['/about', '/about-us', null];
+        yield 'integer' => ['/users/[i:id]', '/users/42', ['id' => '42']];
+        yield 'integer rejects letters' => ['/users/[i:id]', '/users/abc', null];
+        yield 'alphanumeric' => ['/posts/[a:slug]', '/posts/Post1', ['slug' => 'Post1']];
+        yield 'alphanumeric rejects dash' => ['/posts/[a:slug]', '/posts/my-post', null];
+        yield 'hexadecimal' => ['/colors/[h:hex]', '/colors/ff00AA', ['hex' => 'ff00AA']];
+        yield 'hexadecimal rejects g' => ['/colors/[h:hex]', '/colors/fg', null];
+        yield 'segment' => ['/pages/[:name]', '/pages/about-us', ['name' => 'about-us']];
+        yield 'segment stops at slash' => ['/pages/[:name]', '/pages/a/b', null];
+        yield 'segment stops at dot' => ['/files/[:name].[:ext]', '/files/report.pdf', ['name' => 'report', 'ext' => 'pdf']];
+        yield 'lazy wildcard' => ['/files/[*:path]', '/files/docs/a.txt', ['path' => 'docs/a.txt']];
+        yield 'greedy wildcard' => ['/files/[**:path]', '/files/docs/a.txt', ['path' => 'docs/a.txt']];
+        yield 'optional given' => ['/archive/[i:year]/[i:month]?', '/archive/2024/5', ['year' => '2024', 'month' => '5']];
+        yield 'optional missing' => ['/archive/[i:year]/[i:month]?', '/archive/2024', ['year' => '2024']];
+        yield 'custom type regex' => ['/codes/[\d{3}:code]', '/codes/123', ['code' => '123']];
+        yield 'custom type regex mismatch' => ['/codes/[\d{3}:code]', '/codes/12', null];
+        yield 'raw regex' => ['@^/legacy/(?<id>\d+)$', '/legacy/7', ['id' => '7']];
+        yield 'raw regex mismatch' => ['@^/legacy/(?<id>\d+)$', '/legacy/x', null];
+        yield 'any path' => ['*', '/anything/at/all', []];
+        yield 'different prefix' => ['/users/[i:id]', '/people/42', null];
+    }
+
+    /**
+     * @param array<string, string>|null $expected
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('paths')]
+    public function testPathMatching(string $routePath, string $requestPath, ?array $expected)
+    {
+        $this->addRoute([Route::METHOD_GET], $routePath);
+
+        $match = $this->repository->matchRoute($this->request('GET', $requestPath));
+
+        $this->assertSame($expected, $match?->getParameters());
+    }
+
+    public function testFirstRegisteredMatchWins()
+    {
+        $first = $this->addRoute([Route::METHOD_GET], '/users/[i:id]');
+        $this->addRoute([Route::METHOD_GET], '/users/[:name]');
+
+        $this->assertSame($first, $this->repository->matchRoute($this->request('GET', '/users/5'))->getRoute());
+    }
+
     public function testMatchRouteSkipsRoutesForOtherMethods()
     {
         $get = $this->addRoute([Route::METHOD_GET], '/users');
