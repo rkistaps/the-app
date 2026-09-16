@@ -1,5 +1,7 @@
 {
   "name": "rkistaps/the-app",
+  "description": "PHP micro-framework that routes PSR-7 requests through PSR-15 middleware and runs console commands",
+  "license": "MIT",
   "authors": [
     {
       "name": "kristaps taube",

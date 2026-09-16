@@ -339,3 +339,7 @@ PHP runs in Docker, so you only need Docker and a Bash shell (such as Git Bash o
 ./docker-run ./vendor/bin/phpstan analyse  # static analysis (level 8)
 ./docker ssh                               # shell inside the container
 ```
+
+## License
+
+TheApp is released under the [MIT License](LICENSE). You can use it for any purpose, including commercial projects, as long as you keep the copyright notice.
