@@ -34,7 +34,7 @@ class CallableCommandHandler implements CommandHandlerInterface
      * @param array<string, string|true> $params
      * @throws InvalidCommandInputException When a required option is missing or a value doesn't fit its type
      */
-    public function handle(array $params = [])
+    public function handle(array $params = []): void
     {
         $this->container->call($this->callable, $this->convertParams($params));
     }

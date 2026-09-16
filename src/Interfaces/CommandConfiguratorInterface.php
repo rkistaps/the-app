@@ -6,5 +6,5 @@ use TheApp\Components\CommandRunner;
 
 interface CommandConfiguratorInterface
 {
-    public function configureCommands(CommandRunner $commandRunner);
+    public function configureCommands(CommandRunner $commandRunner): void;
 }

@@ -20,7 +20,7 @@ class ConsoleAppTest extends MockeryTestCase
     protected function setUp(): void
     {
         $this->container = new Container();
-        $commandRunner = new CommandRunner($this->container, new CommandHandlerFactory($this->container));
+        $commandRunner = new CommandRunner(new CommandHandlerFactory($this->container));
 
         $this->app = new ConsoleApp($commandRunner, new ConsoleInputParser(), $this->container);
     }

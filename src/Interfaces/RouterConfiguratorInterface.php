@@ -4,16 +4,10 @@ namespace TheApp\Interfaces;
 
 use TheApp\Components\Router;
 
-/**
- * Interface RouterConfiguratorInterface
- * @package TheApp\Interfaces
- */
 interface RouterConfiguratorInterface
 {
     /**
-     * Map routes
-     * @param Router $router
-     * @return void
+     * Register routes on the router
      */
-    public function configureRouter(Router $router);
+    public function configureRouter(Router $router): void;
 }

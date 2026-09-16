@@ -7,7 +7,7 @@ class RouteMatchResult
     private Route $route;
     private array $parameters = [];
 
-    public function __construct(Route $route, $parameters = [])
+    public function __construct(Route $route, array $parameters = [])
     {
         $this->route = $route;
         $this->parameters = $parameters;

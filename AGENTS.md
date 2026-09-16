@@ -37,7 +37,8 @@ See `phpstan.neon`. The rules match the-trader.
 - Defensive `?? default` fallbacks are allowed.
 - When PHPStan calls a check "always true/false" because of a docblock, verify the docblock against runtime behaviour before deleting the check.
 - `stubs/PhpDi.stub` narrows `DI\Container::get()` and `make()` to the requested class.
-- Known errors live in `phpstan-baseline.neon`. Don't hide new errors with `@phpstan-ignore` or by adding them to the baseline. After fixing a baselined error, regenerate the baseline (the command is at the top of `phpstan.neon`), because PHPStan fails on stale entries.
+- `phpstan-baseline.neon` is empty, so keep it that way. Fix new errors instead of hiding them with `@phpstan-ignore` or adding them to the baseline.
+- Public methods and interfaces have native parameter and return types. Adding a type to an interface later breaks implementers, so type new ones from the start.
 
 ## Layout
 

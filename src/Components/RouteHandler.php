@@ -34,12 +34,12 @@ class RouteHandler implements RouteHandlerInterface
         return $this->middlewares;
     }
 
-    public function addMiddlewares(MiddlewareInterface ...$middlewares)
+    public function addMiddlewares(MiddlewareInterface ...$middlewares): void
     {
         $this->middlewares = $middlewares;
     }
 
-    public function addAttribute(string $name, $value)
+    public function addAttribute(string $name, mixed $value): void
     {
         $this->attributes[$name] = $value;
     }
