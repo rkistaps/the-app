@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-16
+
 This release makes many breaking changes to prepare the API for 1.0. Read "Upgrading from 0.4" first.
 
 ### Upgrading from 0.4
@@ -76,5 +78,6 @@ This release makes many breaking changes to prepare the API for 1.0. Read "Upgra
 
 - Replaced the HTTP response emitter from `jasny/http-message` with the package's own `HttpResponseEmitter`.
 
-[Unreleased]: https://github.com/rkistaps/the-app/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/rkistaps/the-app/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/rkistaps/the-app/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/rkistaps/the-app/releases/tag/v0.4.1
