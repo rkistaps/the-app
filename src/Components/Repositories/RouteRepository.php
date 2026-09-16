@@ -34,7 +34,7 @@ class RouteRepository
         $requestPath = $request->getUri()->getPath();
         $lastRequestUrlChar = $request->getUri()->getPath() ? $requestPath[strlen($requestPath) - 1] : '';
 
-        $routes = array_filter($this->routes, fn(Route $route) => $route->isAnyMethod() || $request->getMethod() === $route->method);
+        $routes = array_filter($this->routes, fn(Route $route) => $route->allowsMethod($request->getMethod()));
         foreach ($routes as $route) {
             if ($route->isForAnyPath()) {
                 $isMatch = true;

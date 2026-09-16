@@ -80,47 +80,68 @@ class Router implements RouterInterface
     }
 
     /**
-     * Add route for GET request
-     * @param string $path
-     * @param string|callable $handler
-     * @param string|null $name
-     * @return Route
+     * Add route for GET requests. HEAD requests to the path are matched too.
      */
-    public function get(string $path, $handler, string $name = null): Route
+    public function get(string $path, callable|string $handler, ?string $name = null): Route
     {
-        $route = $this->buildRoute(Route::METHOD_GET, $this->withBasePathPrefix($path), $handler, $name);
-
-        $this->repository->addRoute($route);
-
-        return $route;
+        return $this->map([Route::METHOD_GET], $path, $handler, $name);
     }
 
     /**
-     * Add route for POST request
-     * @param string $path
-     * @param string|callable $handler
-     * @param string|null $name
-     * @return Route
+     * Add route for POST requests
      */
-    public function post(string $path, $handler, string $name = null): Route
+    public function post(string $path, callable|string $handler, ?string $name = null): Route
     {
-        $route = $this->buildRoute(Route::METHOD_POST, $this->withBasePathPrefix($path), $handler, $name);
+        return $this->map([Route::METHOD_POST], $path, $handler, $name);
+    }
 
-        $this->repository->addRoute($route);
+    /**
+     * Add route for PUT requests
+     */
+    public function put(string $path, callable|string $handler, ?string $name = null): Route
+    {
+        return $this->map([Route::METHOD_PUT], $path, $handler, $name);
+    }
 
-        return $route;
+    /**
+     * Add route for PATCH requests
+     */
+    public function patch(string $path, callable|string $handler, ?string $name = null): Route
+    {
+        return $this->map([Route::METHOD_PATCH], $path, $handler, $name);
+    }
+
+    /**
+     * Add route for DELETE requests
+     */
+    public function delete(string $path, callable|string $handler, ?string $name = null): Route
+    {
+        return $this->map([Route::METHOD_DELETE], $path, $handler, $name);
+    }
+
+    /**
+     * Add route for OPTIONS requests
+     */
+    public function options(string $path, callable|string $handler, ?string $name = null): Route
+    {
+        return $this->map([Route::METHOD_OPTIONS], $path, $handler, $name);
     }
 
     /**
      * Add route for any type of request
-     * @param string $path
-     * @param string|callable $handler
-     * @param string|null $name
-     * @return Route
      */
-    public function any(string $path, $handler, string $name = null): Route
+    public function any(string $path, callable|string $handler, ?string $name = null): Route
     {
-        $route = $this->buildRoute(Route::METHOD_ANY, $this->withBasePathPrefix($path), $handler, $name);
+        return $this->map([Route::METHOD_ANY], $path, $handler, $name);
+    }
+
+    /**
+     * Add route for several HTTP methods, such as ['GET', 'POST']
+     * @param string[] $methods
+     */
+    public function map(array $methods, string $path, callable|string $handler, ?string $name = null): Route
+    {
+        $route = $this->buildRoute($methods, $this->withBasePathPrefix($path), $handler, $name);
 
         $this->repository->addRoute($route);
 
@@ -140,10 +161,13 @@ class Router implements RouterInterface
         return $this->basePath . $path;
     }
 
-    public function buildRoute(string $method, string $path, $handler, string $name = null): Route
+    /**
+     * @param string[] $methods
+     */
+    protected function buildRoute(array $methods, string $path, callable|string $handler, ?string $name = null): Route
     {
         $route = new Route();
-        $route->method = $method;
+        $route->methods = array_values(array_unique(array_map('strtoupper', $methods)));
         $route->path = $path;
         $route->handler = $handler;
         $route->name = $name;

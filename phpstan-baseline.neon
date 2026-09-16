@@ -55,12 +55,6 @@ parameters:
 			path: src/Components/RouteHandler.php
 
 		-
-			message: '#^Method TheApp\\Components\\Router\:\:buildRoute\(\) has parameter \$handler with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/Components/Router.php
-
-		-
 			message: '#^Method TheApp\\Interfaces\\CommandConfiguratorInterface\:\:configureCommands\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1

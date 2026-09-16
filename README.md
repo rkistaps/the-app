@@ -105,7 +105,7 @@ final class HomeHandler implements RequestHandlerInterface
 }
 ```
 
-The router provides `get()`, `post()` and `any()`, where `any()` matches every HTTP method. Routes are checked in the order they were registered, and the first match wins.
+The router has a method for each HTTP method: `get()`, `post()`, `put()`, `patch()`, `delete()` and `options()`. `get()` routes also answer `HEAD` requests. `any()` matches every method, and `map()` takes a list, as in `$router->map(['GET', 'POST'], '/search', SearchHandler::class)`. Routes are checked in the order they were registered, and the first match wins.
 
 ### 2. Front controller
 
