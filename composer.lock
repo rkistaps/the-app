@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bbb7c7070480ad71e3b11883a03a820b",
+    "content-hash": "79ff94c7e7388767e362f0707d2235d2",
     "packages": [
         {
             "name": "filp/whoops",
@@ -600,46 +600,6 @@
                 "psr-3"
             ],
             "time": "2018-11-20T15:27:04+00:00"
-        },
-        {
-            "name": "rappasoft/laravel-helpers",
-            "version": "1.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/rappasoft/laravel-helpers.git",
-                "reference": "c8dfa1e979437528262725ebe99c2e6383b24c16"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/rappasoft/laravel-helpers/zipball/c8dfa1e979437528262725ebe99c2e6383b24c16",
-                "reference": "c8dfa1e979437528262725ebe99c2e6383b24c16",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.4.0"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "src/helpers.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Anthony Rappa",
-                    "email": "rappa819@gmail.com"
-                }
-            ],
-            "description": "Laravel Helpers for Non-Laravel Projects",
-            "keywords": [
-                "helpers",
-                "laravel"
-            ],
-            "time": "2019-04-03T13:15:59+00:00"
         },
         {
             "name": "samejack/php-argv",
