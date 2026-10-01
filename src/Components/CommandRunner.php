@@ -28,9 +28,15 @@ class CommandRunner
 
     /**
      * @param callable|string $handler A callable, or the class name of a CommandHandlerInterface implementation
+     * @throws InvalidConfigException When a command with the same name is already registered
      */
     public function addCommand(string $name, callable|string $handler): CommandRunner
     {
+        // The second command could never run, since the name finds the first
+        if ($this->findCommandByName($name) !== null) {
+            throw new InvalidConfigException(sprintf('A command named "%s" is already registered', $name));
+        }
+
         $command = new Command();
         $command->name = $name;
         $command->handler = $handler;

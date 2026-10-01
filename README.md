@@ -184,7 +184,7 @@ public function configureRouter(Router $router): void
 
 ### Generating URLs
 
-Give a route a name as the last argument, then build its path with `Router::url()`. The router is available to handlers and middleware as the `Router::class` request attribute.
+Give a route a name as the last argument, then build its path with `Router::url()`. Names are unique: registering a second route with the same name throws `InvalidConfigException`. The router is available to handlers and middleware as the `Router::class` request attribute.
 
 ```php
 $router->get('/users/[i:id]/[:tab]?', UserHandler::class, 'user');
@@ -372,7 +372,7 @@ $exitCode = AppFactory::console()
 exit($exitCode);
 ```
 
-`withCommandConfigurators()` works like `withRouterConfigurators()`. It takes class names or instances, returns a new app, and accepts an array loaded from a file, such as `require __DIR__ . '/commands.php'`.
+`withCommandConfigurators()` works like `withRouterConfigurators()`. It takes class names or instances, returns a new app, and accepts an array loaded from a file, such as `require __DIR__ . '/commands.php'`. Command names are unique: adding a second command with the same name throws `InvalidConfigException`.
 
 Pass the command name first, then options as `--name=value`, or `--name` alone for a flag:
 

@@ -10,6 +10,7 @@ use Mockery\Adapter\Phpunit\MockeryTestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use TheApp\Components\Repositories\RouteRepository;
+use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Structures\Route;
 
 class RouteRepositoryTest extends MockeryTestCase
@@ -104,13 +105,31 @@ class RouteRepositoryTest extends MockeryTestCase
         $this->assertSame([], $this->repository->findAllowedMethods($this->request('GET', '/posts')));
     }
 
-    public function testFindRouteByNameReturnsFirstMatch()
+    public function testFindRouteByName()
     {
-        $first = $this->addRoute([Route::METHOD_GET], '/users', 'users');
-        $this->addRoute([Route::METHOD_POST], '/people', 'users');
+        $users = $this->addRoute([Route::METHOD_GET], '/users', 'users');
+        $this->addRoute([Route::METHOD_GET], '/people', 'people');
 
-        $this->assertSame($first, $this->repository->findRouteByName('users'));
+        $this->assertSame($users, $this->repository->findRouteByName('users'));
         $this->assertNull($this->repository->findRouteByName('missing'));
+    }
+
+    public function testAddRouteThrowsForDuplicateName()
+    {
+        $this->addRoute([Route::METHOD_GET], '/users', 'users');
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('A route named "users" is already registered');
+
+        $this->addRoute([Route::METHOD_POST], '/people', 'users');
+    }
+
+    public function testRoutesWithoutNameCanShareAPath()
+    {
+        $get = $this->addRoute([Route::METHOD_GET], '/users');
+        $this->addRoute([Route::METHOD_POST], '/users');
+
+        $this->assertSame($get, $this->repository->matchRoute($this->request('GET', '/users'))->getRoute());
     }
 
     public function testBuildPathFillsParameters()

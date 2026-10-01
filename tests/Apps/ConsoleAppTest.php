@@ -152,6 +152,15 @@ class ConsoleAppTest extends MockeryTestCase
         $this->assertSame(1, $app->run(['console.php', 'hello']));
     }
 
+    public function testDuplicateCommandNameThrows()
+    {
+        $app = $this->app->withCommandConfigurators([$this->configurator('hello'), $this->configurator('hello')]);
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('A command named "hello" is already registered');
+        $app->run(['console.php', 'hello', '--name=World']);
+    }
+
     public function testInvalidConfiguratorThrows()
     {
         $this->container->set('notAConfigurator', new stdClass());

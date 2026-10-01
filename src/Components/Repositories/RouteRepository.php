@@ -6,6 +6,7 @@ namespace TheApp\Components\Repositories;
 
 use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
+use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Structures\Route;
 use TheApp\Structures\RouteMatchResult;
 
@@ -29,15 +30,24 @@ class RouteRepository
         '' => '[^/\.]++',
     ];
 
+    /**
+     * @throws InvalidConfigException When a route with the same name is already registered
+     */
     public function addRoute(Route $route): static
     {
+        // A second route with the same name would never be found by name, so url() would silently build the first
+        $name = $route->getName();
+        if ($name !== null && $this->findRouteByName($name) !== null) {
+            throw new InvalidConfigException(sprintf('A route named "%s" is already registered', $name));
+        }
+
         $this->routes[] = $route;
 
         return $this;
     }
 
     /**
-     * Find the first route registered with the given name
+     * Find the route registered with the given name
      */
     public function findRouteByName(string $name): ?Route
     {
