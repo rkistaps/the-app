@@ -134,7 +134,7 @@ $container = (new ContainerBuilder())
     ])
     ->build();
 
-$app = AppFactory::webAppFromContainer($container)
+$app = AppFactory::web($container)
     ->withRouterConfigurators([
         WebRoutes::class,
     ])
@@ -142,6 +142,8 @@ $app = AppFactory::webAppFromContainer($container)
 
 (new HttpResponseEmitter())->emit($app->run($request));
 ```
+
+`AppFactory::web()` and `AppFactory::console()` take an optional PHP-DI container. Without one, they build a default container, which is enough when your handlers need no container definitions. TheApp uses PHP-DI to autowire handlers and to call callables with their dependencies, so the container must be a `DI\Container`.
 
 How the setup methods behave:
 - **Arguments:** `withRouterConfigurators()` and `withErrorHandler()` accept class names, which are resolved from the container, or ready-made instances.
@@ -339,14 +341,11 @@ The entry point passes the configurators and `$argv` to the console app:
 ```php
 // console.php
 use Acme\Console\UserCommands;
-use DI\ContainerBuilder;
 use TheApp\Factories\AppFactory;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$container = (new ContainerBuilder())->build();
-
-$exitCode = AppFactory::consoleAppFromContainer($container)
+$exitCode = AppFactory::console()
     ->withCommandConfigurators([
         UserCommands::class,
     ])

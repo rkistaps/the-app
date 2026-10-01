@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** `AppFactory::webAppFromContainer()` and `consoleAppFromContainer()` are replaced by `AppFactory::web()` and `AppFactory::console()`. The container argument is optional; without one, a default PHP-DI container is built. It's typed as `DI\Container`, because TheApp requires PHP-DI. To upgrade, rename the calls, as in `AppFactory::web($container)`.
+
 ## [0.5.0] - 2026-09-16
 
 This release makes many breaking changes to prepare the API for 1.0. Read "Upgrading from 0.4" first.

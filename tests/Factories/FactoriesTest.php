@@ -31,10 +31,19 @@ class FactoriesTest extends MockeryTestCase
         $this->container = new Container();
     }
 
-    public function testAppFactoryBuildsAppsFromContainer()
+    public function testAppFactoryBuildsAppsWithoutContainer()
     {
-        $this->assertInstanceOf(WebApp::class, AppFactory::webAppFromContainer($this->container));
-        $this->assertInstanceOf(ConsoleApp::class, AppFactory::consoleAppFromContainer($this->container));
+        $this->assertInstanceOf(WebApp::class, AppFactory::web());
+        $this->assertInstanceOf(ConsoleApp::class, AppFactory::console());
+    }
+
+    public function testAppFactoryGetsAppsFromGivenContainer()
+    {
+        $webApp = AppFactory::web($this->container);
+        $consoleApp = AppFactory::console($this->container);
+
+        $this->assertSame($this->container->get(WebApp::class), $webApp);
+        $this->assertSame($this->container->get(ConsoleApp::class), $consoleApp);
     }
 
     public function testConfigFactoryBuildsArrayConfig()
