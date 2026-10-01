@@ -18,6 +18,8 @@ It's built on [PHP-DI](https://php-di.org/), so handlers, middleware and command
   - [Error handling](#error-handling)
   - [Building responses](#building-responses)
 - [Console application](#console-application)
+  - [Output](#output)
+  - [Exit codes and errors](#exit-codes-and-errors)
 - [Versioning and support](#versioning-and-support)
 - [Development](#development)
 - [License](#license)
@@ -339,14 +341,15 @@ namespace Acme\Console;
 
 use TheApp\Components\CommandRunner;
 use TheApp\Interfaces\CommandConfiguratorInterface;
+use TheApp\Interfaces\OutputInterface;
 
 final class UserCommands implements CommandConfiguratorInterface
 {
     public function configureCommands(CommandRunner $commandRunner): void
     {
-        $commandRunner->addCommand('user/greet', function (string $name, int $times = 1) {
+        $commandRunner->addCommand('user/greet', function (string $name, OutputInterface $output, int $times = 1) {
             for ($i = 0; $i < $times; $i++) {
-                echo "Hello, {$name}!" . PHP_EOL;
+                $output->writeln("Hello, {$name}!");
             }
         });
 
@@ -359,18 +362,23 @@ final class UserCommands implements CommandConfiguratorInterface
 namespace Acme\Console;
 
 use TheApp\Interfaces\CommandHandlerInterface;
+use TheApp\Interfaces\OutputInterface;
 
 final class ImportUsersCommand implements CommandHandlerInterface
 {
+    public function __construct(private OutputInterface $output)
+    {
+    }
+
     public function handle(array $params = []): int
     {
         $file = $params['file'] ?? 'users.csv';
         if (!is_readable($file)) {
-            echo "Cannot read {$file}" . PHP_EOL;
+            $this->output->error("Cannot read {$file}");
             return 1;
         }
 
-        echo "Importing users from {$file}" . PHP_EOL;
+        $this->output->writeln("Importing users from {$file}");
 
         return 0;
     }
@@ -415,7 +423,28 @@ For callable commands, option values are converted to the parameter's type:
 | `float` | Numbers, such as `--fee=0.002` |
 | `string` | Any value. A flag without a value is rejected |
 
-`run()` returns the command's exit code. It returns `1` when the command isn't found or its input is invalid, and in the second case prints a message such as `Missing required option --name` or `Option --times expects an integer`.
+### Output
+
+Commands write through `OutputInterface`: `write()` and `writeln()` to standard output, and `error()` to standard error. Errors on standard error stay out of the command's real output when it's piped or redirected, as in `php console.php user/export > users.csv`. A command gets the output from the container: a command class as a constructor parameter, a callable as a parameter, as in the examples above. `echo` keeps working, and `writeln()` and `echo` keep their order, because by default both go to the same channel.
+
+By default the output is a `StreamOutput` to standard output and standard error. To use another, pass it to `withOutput()`, or define `OutputInterface` in your container. The console app sets the output it uses in the container as `OutputInterface`, so commands and the error handler get the same one.
+
+In tests, a `BufferedOutput` keeps what a command wrote, with standard output and standard error apart:
+
+```php
+$output = new BufferedOutput();
+$exitCode = AppFactory::console($container)
+    ->withCommandConfigurators([UserCommands::class])
+    ->withOutput($output)
+    ->run(['console.php', 'user/greet', '--name=World']);
+
+$output->getOutput(); // "Hello, World!\n"
+$output->getErrors(); // ""
+```
+
+### Exit codes and errors
+
+`run()` returns the command's exit code. It returns `1` when the command isn't found or its input is invalid, and writes a message such as `Command not found`, `Missing required option --name` or `Option --times expects an integer` to standard error.
 
 Any other exception from a command goes to the handler set with `withErrorHandler()`, which reports it and returns the exit code. Without one, the exception is rethrown from `run()`, and PHP prints it and exits with code 255.
 
@@ -424,18 +453,19 @@ namespace Acme\Console;
 
 use Psr\Log\LoggerInterface;
 use TheApp\Interfaces\ConsoleErrorHandlerInterface;
+use TheApp\Interfaces\OutputInterface;
 use Throwable;
 
 final class ConsoleErrorHandler implements ConsoleErrorHandlerInterface
 {
-    public function __construct(private LoggerInterface $logger)
+    public function __construct(private LoggerInterface $logger, private OutputInterface $output)
     {
     }
 
     public function handle(Throwable $throwable, array $argv): int
     {
         $this->logger->error('Command failed: ' . implode(' ', $argv), ['exception' => $throwable]);
-        fwrite(STDERR, $throwable->getMessage() . PHP_EOL);
+        $this->output->error($throwable->getMessage());
 
         return 1;
     }

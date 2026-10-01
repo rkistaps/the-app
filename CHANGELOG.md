@@ -9,9 +9,11 @@ All notable changes to this project are documented here. The format follows [Kee
 - `WebApp::withMiddleware(array)` adds middleware that runs on every request, before routing, so also for requests no route matches. Use it for CORS, sessions, security headers or request logging. With an error handler set, error responses, including 404 and 405, pass back through this middleware, so it can add headers to them too.
 - `Router::group($prefix, $callback)` registers routes under a common prefix and returns a `RouteGroup`, whose `addMiddleware()` adds middleware to every route in the group. Groups can be nested; prefixes add up, and an outer group's middleware runs first.
 - `Route::addMiddleware()` and `RouteGroup::addMiddleware()` accept `MiddlewareInterface` instances, besides class names and callables.
+- Console output: `OutputInterface` with `write()`, `writeln()` and `error()` for standard error. Commands get it from the container, in a command class's constructor or as a callable's parameter. `ConsoleApp::withOutput()` sets it; the default `StreamOutput` writes to standard output and standard error, and `BufferedOutput` keeps output and errors in memory for tests. `CommandHandlerInterface` is unchanged, and `echo` keeps working.
 
 ### Changed
 
+- **Behaviour change:** `ConsoleApp`'s own messages, "Command not found" and invalid-option messages such as `Missing required option --name`, go to standard error instead of standard output, so they don't end up in a command's redirected output. Tests that checked them with `expectOutputString()` should pass a `BufferedOutput` to `withOutput()` and check `getErrors()`.
 - A route middleware class name that resolves to something other than a `MiddlewareInterface` throws `InvalidConfigException`, like configurators and error handlers do. Before, it failed with a `TypeError`.
 
 ## [0.8.0] - 2026-10-01

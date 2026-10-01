@@ -7,12 +7,17 @@ namespace TheApp\Apps;
 use DI\Container;
 use TheApp\Components\CommandRunner;
 use TheApp\Components\ConsoleInputParser;
+use TheApp\Components\Output\StreamOutput;
 use TheApp\Exceptions\InvalidCommandInputException;
 use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Interfaces\CommandConfiguratorInterface;
 use TheApp\Interfaces\ConsoleErrorHandlerInterface;
+use TheApp\Interfaces\OutputInterface;
 use Throwable;
 
+/**
+ * Runs the command named by the command-line arguments, and writes its own messages to the output's standard error
+ */
 class ConsoleApp extends App
 {
     private CommandRunner $commandRunner;
@@ -21,6 +26,7 @@ class ConsoleApp extends App
     /** @var array<CommandConfiguratorInterface|string> */
     private array $commandConfigurators = [];
     private ConsoleErrorHandlerInterface|string|null $errorHandler = null;
+    private OutputInterface|string|null $output = null;
 
     /** Command runner with the configurators applied, built on first use */
     private ?CommandRunner $configuredCommandRunner = null;
@@ -68,32 +74,69 @@ class ConsoleApp extends App
     }
 
     /**
+     * Return a new app that writes to the given output, such as a BufferedOutput in tests. Without one, it uses
+     * the container's OutputInterface if it has one, or a StreamOutput to standard output and standard error.
+     * A class name is resolved from the container when the app runs.
+     */
+    public function withOutput(OutputInterface|string $output): static
+    {
+        $app = clone $this;
+        $app->output = $output;
+
+        return $app;
+    }
+
+    /**
      * Run the command named by the arguments, such as ['console.php', 'user/greet', '--name=World']
      *
      * @param string[] $argv Arguments as in PHP's $argv, where the first element is the script name
      * @return int Exit code: the command's own, 1 when the command isn't found or its input is invalid,
      *     or the error handler's when the command throws
+     * @throws InvalidConfigException When the output given to withOutput() isn't an OutputInterface
      * @throws Throwable When no error handler is set
      */
     public function run(array $argv): int
     {
+        $output = $this->getOutput();
+
         try {
             $commandRunner = $this->getCommandRunner();
             $input = $this->inputParser->parse($argv);
             $command = $input->command !== null ? $commandRunner->findCommandByName($input->command) : null;
             if (!$command) {
-                echo 'Command not found' . PHP_EOL;
+                $output->error('Command not found');
                 return 1;
             }
 
             return $commandRunner->runCommand($command, $input->options);
         } catch (InvalidCommandInputException $exception) {
             // A mistake by the person running the command, so the message is all they need
-            echo $exception->getMessage() . PHP_EOL;
+            $output->error($exception->getMessage());
             return 1;
         } catch (Throwable $throwable) {
             return $this->handleErrors($throwable, $argv);
         }
+    }
+
+    /**
+     * The output for this run. It's also set in the container as OutputInterface, so commands and the error
+     * handler get the same one.
+     *
+     * @throws InvalidConfigException
+     */
+    private function getOutput(): OutputInterface
+    {
+        if ($this->output !== null) {
+            $output = $this->resolve($this->output, OutputInterface::class);
+        } elseif ($this->container->has(OutputInterface::class)) {
+            $output = $this->resolve(OutputInterface::class, OutputInterface::class);
+        } else {
+            $output = $this->container->get(StreamOutput::class);
+        }
+
+        $this->container->set(OutputInterface::class, $output);
+
+        return $output;
     }
 
     /**
