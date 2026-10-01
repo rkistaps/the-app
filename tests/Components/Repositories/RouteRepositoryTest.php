@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TheApp\Tests\Components\Repositories;
 
 use InvalidArgumentException;

@@ -79,6 +79,8 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 - Resolve dependencies through the container or constructor injection. Don't use `new` for services. Handlers and middlewares may be a class name or a callable, so support both when adding new extension points.
 - Don't make the framework read config keys. New setup options are `with*` methods on the app that accept a class name or an instance and resolve it with `App::resolve()`, which checks the type.
 - `Router::withBasePath()` is immutable and returns a clone. Keep "with" methods immutable.
+- Every PHP file starts with `declare(strict_types=1);`.
+- Classes aren't `final`, so projects can extend any of them. That makes `protected` methods of public classes part of the public API: use `private` for anything that isn't meant to be overridden.
 - Style is PSR-12. Newer code uses typed properties and constructor property promotion (see `Router`), while older code declares properties explicitly. Match the file you're editing, and prefer typed signatures in new code.
 - Tests extend `Mockery\Adapter\Phpunit\MockeryTestCase`, mock collaborators with `Mockery::mock()`, and use `testMethodName` naming.
 - The public API is everything in `TheApp\` not marked `@internal`, and after 1.0 it only breaks in major releases. Mark new implementation-detail classes `@internal`, and record breaking changes in `CHANGELOG.md`.

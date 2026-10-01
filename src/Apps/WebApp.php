@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TheApp\Apps;
 
 use DI\Container;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TheApp\Interfaces;
 
 use TheApp\Components\Router;
