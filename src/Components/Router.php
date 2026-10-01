@@ -14,18 +14,20 @@ use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Exceptions\MethodNotAllowedException;
 use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Interfaces\RouteHandlerInterface;
-use TheApp\Interfaces\RouterInterface;
 use TheApp\Structures\Route;
 use TheApp\Structures\RouteMatchResult;
 
 /**
- * Class Router
- * @package TheApp\Components
+ * Registers routes, and builds the paths of named routes. Router configurators get one, and handlers
+ * get the app's router as the Router::class request attribute.
  */
-class Router implements RouterInterface
+class Router
 {
     private string $basePath = '';
 
+    /**
+     * @internal Each app builds its own router from its configurators
+     */
     public function __construct(
         private RouteRepository $repository,
         private RequestHandlerFactory $requestHandlerFactory,
@@ -47,6 +49,7 @@ class Router implements RouterInterface
     }
 
     /**
+     * @internal Used by WebApp to match the request
      * @throws MethodNotAllowedException When a route matches the path but not the method
      * @throws NoRouteMatchException|InvalidConfigException
      */

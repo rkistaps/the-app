@@ -58,9 +58,9 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 
 **App setup is code, not config.** The framework never reads a config file. Apps are set up with immutable `with*` methods: `WebApp::withRouterConfigurators(array)`, `WebApp::withErrorHandler()` and `ConsoleApp::withCommandConfigurators(array)`. Each accepts class names or instances. `App::resolve()` resolves class names from the container when the app runs, and throws `InvalidConfigException` for the wrong type. Each app builds its own `Router` (with a fresh `RouteRepository`) or clones its `CommandRunner` on first use, and `__clone` resets that cache, so apps returned by `with*` never share routes or commands.
 
-**Web request flow.** `AppFactory::web(?Container)` returns the container's `WebApp`, and builds a default PHP-DI container when none is given (`AppFactory::console()` does the same for `ConsoleApp`). `WebApp::run($request, ?$router)` then does the following:
+**Web request flow.** `AppFactory::web(?Container)` returns the container's `WebApp`, and builds a default PHP-DI container when none is given (`AppFactory::console()` does the same for `ConsoleApp`). `WebApp::run($request)` then does the following:
 
-1. It uses the router passed in, or builds one from the configurators. `Router::getRouteHandler()` asks `RouteRepository::matchRoute()` for a match. If nothing matches, it throws `NoRouteMatchException`, or `MethodNotAllowedException` when only the method differs (`RouteRepository::findAllowedMethods()`).
+1. It builds the router from the configurators on first use. `Router::getRouteHandler()` asks `RouteRepository::matchRoute()` for a match. If nothing matches, it throws `NoRouteMatchException`, or `MethodNotAllowedException` when only the method differs (`RouteRepository::findAllowedMethods()`).
 2. The matched route's handler and middlewares are resolved. A callable is wrapped in `CallableRequestHandler` or `CallableMiddleware`. A class name is fetched from the container.
 3. `MiddlewareStackFactory` builds a `MiddlewareStack`. Route parameters are added as request attributes, and the stack handles the request.
 4. Any `Throwable` goes to the handler from `withErrorHandler()`. Without one, the exception is rethrown.

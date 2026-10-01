@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Changed
 
 - **Breaking:** `ConsoleApp` and the `App` base class take a `DI\Container` instead of any PSR-11 `ContainerInterface`, like `WebApp` already did. Apps from `AppFactory` or the container are unaffected; only code that constructs `ConsoleApp` itself with another container needs a PHP-DI one.
+- **Breaking:** `WebApp::run()` no longer takes a router as its second argument, and `RouterInterface` is removed. The router came from internal classes and returned an internal type, so it couldn't be built or implemented through the public API. Register routes with `withRouterConfigurators()` instead. `Router::getRouteHandler()` and the `Router` constructor are now internal.
 - The `TheApp\Tests\` namespace moved from `autoload` to `autoload-dev`, so it's no longer added to your project's autoloader.
 
 ## [0.7.0] - 2026-10-01

@@ -15,7 +15,6 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use stdClass;
 use TheApp\Apps\WebApp;
-use TheApp\Components\Repositories\RouteRepository;
 use TheApp\Components\Router;
 use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Exceptions\NoRouteMatchException;
@@ -73,24 +72,17 @@ class WebAppTest extends MockeryTestCase
         );
         $this->container->set('authMiddleware', $classMiddleware);
 
-        $router = new Router(new RouteRepository(), new RequestHandlerFactory($this->container), $this->container);
-        $router->get('/admin', fn() => $this->response)
-            ->withMiddleware('authMiddleware')
-            ->withMiddleware(function (ServerRequestInterface $request, RequestHandlerInterface $next) use (&$calls) {
-                $calls[] = 'callable';
-                return $next->handle($request);
-            });
+        $app = $this->app->withRouterConfigurators([$this->routes(function (Router $router) use (&$calls) {
+            $router->get('/admin', fn() => $this->response)
+                ->withMiddleware('authMiddleware')
+                ->withMiddleware(function (ServerRequestInterface $request, RequestHandlerInterface $next) use (&$calls) {
+                    $calls[] = 'callable';
+                    return $next->handle($request);
+                });
+        })]);
 
-        $this->assertSame($this->response, $this->app->run($this->request('/admin'), $router));
+        $this->assertSame($this->response, $app->run($this->request('/admin')));
         $this->assertSame(['class', 'callable'], $calls);
-    }
-
-    public function testRunUsesRouterPassedIn()
-    {
-        $router = new Router(new RouteRepository(), new RequestHandlerFactory($this->container), $this->container);
-        $router->get('/hello', fn() => $this->response);
-
-        $this->assertSame($this->response, $this->app->run($this->request('/hello'), $router));
     }
 
     public function testWithRouterConfiguratorsAcceptsInstancesAndClassNames()
@@ -143,14 +135,23 @@ class WebAppTest extends MockeryTestCase
 
     private function configurator(string $path, ResponseInterface $response): RouterConfiguratorInterface
     {
-        return new class ($path, $response) implements RouterConfiguratorInterface {
-            public function __construct(private string $path, private ResponseInterface $response)
+        return $this->routes(fn(Router $router) => $router->get($path, fn() => $response));
+    }
+
+    private function routes(callable $configure): RouterConfiguratorInterface
+    {
+        return new class ($configure) implements RouterConfiguratorInterface {
+            /** @var callable */
+            private $configure;
+
+            public function __construct(callable $configure)
             {
+                $this->configure = $configure;
             }
 
             public function configureRouter(Router $router): void
             {
-                $router->get($this->path, fn() => $this->response);
+                ($this->configure)($router);
             }
         };
     }

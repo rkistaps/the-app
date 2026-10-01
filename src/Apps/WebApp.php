@@ -14,7 +14,6 @@ use TheApp\Factories\MiddlewareStackFactory;
 use TheApp\Factories\RequestHandlerFactory;
 use TheApp\Interfaces\ErrorHandlerInterface;
 use TheApp\Interfaces\RouterConfiguratorInterface;
-use TheApp\Interfaces\RouterInterface;
 use Throwable;
 
 /**
@@ -76,25 +75,19 @@ class WebApp extends App
     }
 
     /**
-     * Run application
-     * @param ServerRequestInterface $request
-     * @param RouterInterface|null $router Router to use instead of the one built from withRouterConfigurators()
-     * @return ResponseInterface
-     * @throws Throwable
+     * Route the request through its route's middleware to its handler
+     *
+     * @throws Throwable When no error handler is set
      */
-    public function run(
-        ServerRequestInterface $request,
-        ?RouterInterface $router = null
-    ): ResponseInterface {
+    public function run(ServerRequestInterface $request): ResponseInterface
+    {
         try {
-            $router ??= $this->getRouter();
+            $router = $this->getRouter();
             $handler = $router->getRouteHandler($request);
             $stack = $this->stackFactory->buildFromRouteHandler($handler);
 
             // Lets handlers build URLs with $request->getAttribute(Router::class)->url()
-            if ($router instanceof Router) {
-                $request = $request->withAttribute(Router::class, $router);
-            }
+            $request = $request->withAttribute(Router::class, $router);
 
             foreach ($handler->getAttributes() as $name => $value) {
                 $request = $request->withAttribute($name, $value);

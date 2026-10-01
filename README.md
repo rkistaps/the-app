@@ -150,7 +150,6 @@ How the setup methods behave:
 - **Immutable:** each returns a new app and leaves the original unchanged.
 - **Type checks:** a class that doesn't implement the expected interface throws `TheApp\Exceptions\InvalidConfigException`.
 - **Lists in a file:** a long list of configurators can live in a file of your choice that returns an array of class names, such as `->withRouterConfigurators(require __DIR__ . '/routes.php')`.
-- **Your own router:** to skip configurators, pass a router you built yourself as the second argument, as in `$app->run($request, $router)`.
 
 Build the container however and wherever suits your project. For bigger apps that usually means a separate file of definitions.
 
