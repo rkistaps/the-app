@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-01
+
 ### Changed
 
 - **Breaking:** `AppFactory::webAppFromContainer()` and `consoleAppFromContainer()` are replaced by `AppFactory::web()` and `AppFactory::console()`. The container argument is optional; without one, a default PHP-DI container is built. It's typed as `DI\Container`, because TheApp requires PHP-DI. To upgrade, rename the calls, as in `AppFactory::web($container)`.
@@ -82,6 +84,7 @@ This release makes many breaking changes to prepare the API for 1.0. Read "Upgra
 
 - Replaced the HTTP response emitter from `jasny/http-message` with the package's own `HttpResponseEmitter`.
 
-[Unreleased]: https://github.com/rkistaps/the-app/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/rkistaps/the-app/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/rkistaps/the-app/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/rkistaps/the-app/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/rkistaps/the-app/releases/tag/v0.4.1
