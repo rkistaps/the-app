@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- A middleware that calls the next handler more than once, such as a retry, no longer skips middleware on the later calls. Before, each call removed one middleware from the stack, so the second call left out the middleware after it.
+
 ## [0.6.0] - 2026-10-01
 
 ### Changed

@@ -26,15 +26,16 @@ class MiddlewareStack implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $middleware = array_shift($this->middlewares);
+        $middleware = $this->middlewares[0] ?? null;
+        if ($middleware === null) {
+            return $this->requestHandler->handle($request);
+        }
 
-        return $middleware
-            ? $middleware->process(
-                $request,
-                new MiddlewareStack(
-                    $this->requestHandler,
-                    ...$this->middlewares
-                ))
-            : $this->requestHandler->handle($request);
+        // The stack itself never changes, so a middleware can call the next handler more than once,
+        // as a retry does, and every middleware after it still runs each time
+        return $middleware->process(
+            $request,
+            new MiddlewareStack($this->requestHandler, ...array_slice($this->middlewares, 1))
+        );
     }
 }

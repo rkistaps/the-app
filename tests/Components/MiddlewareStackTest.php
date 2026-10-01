@@ -54,6 +54,40 @@ class MiddlewareStackTest extends MockeryTestCase
         $this->assertSame($response, $stack->handle(Mockery::mock(ServerRequestInterface::class)));
     }
 
+    public function testMiddlewareCanCallNextHandlerMoreThanOnce()
+    {
+        $calls = [];
+        $response = Mockery::mock(ResponseInterface::class);
+
+        $handler = Mockery::mock(RequestHandlerInterface::class);
+        $handler->shouldReceive('handle')->twice()->andReturnUsing(function () use (&$calls, $response) {
+            $calls[] = 'handler';
+            return $response;
+        });
+
+        $retry = Mockery::mock(MiddlewareInterface::class);
+        $retry->shouldReceive('process')->once()->andReturnUsing(
+            function (ServerRequestInterface $request, RequestHandlerInterface $next) {
+                $next->handle($request);
+
+                return $next->handle($request);
+            }
+        );
+
+        $auth = Mockery::mock(MiddlewareInterface::class);
+        $auth->shouldReceive('process')->twice()->andReturnUsing(
+            function (ServerRequestInterface $request, RequestHandlerInterface $next) use (&$calls) {
+                $calls[] = 'auth';
+                return $next->handle($request);
+            }
+        );
+
+        $stack = new MiddlewareStack($handler, $retry, $auth);
+
+        $this->assertSame($response, $stack->handle(Mockery::mock(ServerRequestInterface::class)));
+        $this->assertSame(['auth', 'handler', 'auth', 'handler'], $calls);
+    }
+
     /**
      * @param string[] $calls
      */
