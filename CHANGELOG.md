@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-01
+
+The first stable release. Its API is the same as 0.9.0: no code changed. From here on, minor and patch releases don't break the public API, which is everything in `TheApp\` not marked `@internal`; breaking changes wait for 2.0.
+
+Upgrading from 0.9: require `rkistaps/the-app` as `^1.0`. Upgrading from an older 0.x release: follow the notes of each release below, from yours up to 0.9.0.
+
+### Changed
+
+- The README and SECURITY.md describe the 1.x support policy: the latest 1.x release receives bug and security fixes, and 0.x releases no longer do.
+
 ## [0.9.0] - 2026-10-01
 
 This release adds what production apps need on top of the 0.8 API: middleware for the whole app, route groups, and console output. All of it is additive; the one behaviour change is that the console app's own messages go to standard error.
@@ -128,7 +138,8 @@ This release makes many breaking changes to prepare the API for 1.0. Read "Upgra
 
 - Replaced the HTTP response emitter from `jasny/http-message` with the package's own `HttpResponseEmitter`.
 
-[Unreleased]: https://github.com/rkistaps/the-app/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/rkistaps/the-app/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/rkistaps/the-app/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/rkistaps/the-app/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/rkistaps/the-app/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/rkistaps/the-app/compare/v0.6.0...v0.7.0

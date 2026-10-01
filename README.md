@@ -481,13 +481,13 @@ $exitCode = AppFactory::console($container)
 
 ## Versioning and support
 
-TheApp follows [semantic versioning](https://semver.org/). From 1.0, minor and patch releases don't break the public API. The public API is every class, interface and method in `TheApp\` except those marked `@internal`. Internal classes, such as `RouteRepository`, `MiddlewareStack` and the `Callable*` adapters, can change in any release.
+TheApp follows [semantic versioning](https://semver.org/). Minor and patch releases don't break the public API; breaking changes come only in a new major version, with upgrade notes in the changelog. The public API is every class, interface and method in `TheApp\` except those marked `@internal`. Internal classes, such as `RouteRepository`, `MiddlewareStack` and the `Callable*` adapters, can change in any release.
 
-Before 1.0, minor releases (0.x) may contain breaking changes, which are listed in the changelog.
+Require TheApp as `^1.0` to get every 1.x release.
 
 Supported versions:
 - **PHP:** 8.3, 8.4 and 8.5. Support for a PHP version is dropped only in a major release, and only once that PHP version no longer receives security fixes.
-- **TheApp:** the latest release receives bug and security fixes.
+- **TheApp:** the latest 1.x release receives bug and security fixes. The 0.x releases don't.
 
 To report a security vulnerability, see [SECURITY.md](SECURITY.md).
 

@@ -2,12 +2,13 @@
 
 ## Supported versions
 
-Security fixes are released for the latest minor version of the current major version. Before 1.0, only the latest 0.x release receives fixes.
+Security fixes are released for the latest minor version of the current major version.
 
 | Version | Supported |
 | --- | --- |
-| Latest release | Yes |
-| Older releases | No |
+| Latest 1.x release | Yes |
+| Older 1.x releases | No, upgrade to the latest 1.x |
+| 0.x | No |
 
 ## Reporting a vulnerability
 
