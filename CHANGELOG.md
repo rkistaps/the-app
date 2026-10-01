@@ -11,7 +11,6 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Changed
 
 - **Breaking:** `CommandHandlerInterface::handle()` returns the command's exit code as an `int` instead of `void`, and `ConsoleApp::run()` returns it. Add `: int` to your command classes and return `0` on success. Callable commands can return an `int` too; any other return value, or none, still counts as `0`.
-
 - **Breaking:** `ErrorHandlerInterface::handle()` also gets the request: `handle(Throwable $throwable, ServerRequestInterface $request)`. An error handler can now answer depending on the request, such as JSON for API paths, without a second app. Add the parameter to your error handlers.
 - **Breaking:** `Route::withMiddleware()` is renamed to `addMiddleware()`, because it changes the route, while `with*` methods elsewhere return a copy. Rename the calls in your route configurators.
 - **Breaking:** `Route`'s properties are private. Read them with `getMethods()`, `getPath()`, `getHandler()`, `getName()` and `getMiddlewares()`. Routes are created by the router; the new constructor is internal.
@@ -19,6 +18,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - **Breaking:** registering a second route with the same name, or a second command with the same name, throws `InvalidConfigException`. Before, the second one was silently ignored: `url()` built the first route's path, and the second command never ran. Rename one of them. Routes without a name are unaffected.
 - **Breaking:** `ConsoleApp` and the `App` base class take a `DI\Container` instead of any PSR-11 `ContainerInterface`, like `WebApp` already did. Apps from `AppFactory` or the container are unaffected; only code that constructs `ConsoleApp` itself with another container needs a PHP-DI one.
 - **Breaking:** `WebApp::run()` no longer takes a router as its second argument, and `RouterInterface` is removed. The router came from internal classes and returned an internal type, so it couldn't be built or implemented through the public API. Register routes with `withRouterConfigurators()` instead. `Router::getRouteHandler()` and the `Router` constructor are now internal.
+- **Breaking:** methods that are implementation details are private instead of protected, so subclasses can no longer override them: `WebApp::getRouter()` and `handleErrors()`, `ConsoleApp::getCommandRunner()`, `Router::initializeRoute()` and `buildRoute()`, and the `ResponseBuilder::$response` property. Classes stay extensible, and `App::resolve()` stays protected for subclasses.
 - The `TheApp\Tests\` namespace moved from `autoload` to `autoload-dev`, so it's no longer added to your project's autoloader.
 
 ## [0.7.0] - 2026-10-01

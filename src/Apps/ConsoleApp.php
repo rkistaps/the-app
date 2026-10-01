@@ -112,7 +112,7 @@ class ConsoleApp extends App
     /**
      * @throws InvalidConfigException
      */
-    protected function getCommandRunner(): CommandRunner
+    private function getCommandRunner(): CommandRunner
     {
         if ($this->configuredCommandRunner === null) {
             // Configure a copy, so apps returned by withCommandConfigurators() don't share commands

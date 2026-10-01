@@ -84,7 +84,7 @@ class Router
         return $this->repository->buildPath($route, $parameters);
     }
 
-    protected function initializeRoute(RouteMatchResult $matchResult): RouteHandlerInterface
+    private function initializeRoute(RouteMatchResult $matchResult): RouteHandlerInterface
     {
         $route = $matchResult->getRoute();
 
@@ -193,7 +193,7 @@ class Router
     /**
      * @param string[] $methods
      */
-    protected function buildRoute(array $methods, string $path, callable|string $handler, ?string $name = null): Route
+    private function buildRoute(array $methods, string $path, callable|string $handler, ?string $name = null): Route
     {
         return new Route($methods, $path, $handler, $name);
     }

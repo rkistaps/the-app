@@ -104,7 +104,7 @@ class WebApp extends App
     /**
      * @throws InvalidConfigException
      */
-    protected function getRouter(): Router
+    private function getRouter(): Router
     {
         if ($this->configuredRouter === null) {
             // A new repository, so apps returned by withRouterConfigurators() don't share routes
@@ -122,7 +122,7 @@ class WebApp extends App
     /**
      * @throws Throwable When no error handler is set
      */
-    protected function handleErrors(Throwable $throwable, ServerRequestInterface $request): ResponseInterface
+    private function handleErrors(Throwable $throwable, ServerRequestInterface $request): ResponseInterface
     {
         if ($this->errorHandler === null) {
             throw $throwable;

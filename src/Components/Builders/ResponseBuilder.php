@@ -9,7 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 
 class ResponseBuilder
 {
-    protected ResponseInterface $response;
+    private ResponseInterface $response;
 
     public function __construct(ResponseFactoryInterface $responseFactory)
     {
