@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-01
+
+This release settles the public API for 1.0 and makes several breaking changes. Each one below says what to change in your project.
+
 ### Added
 
 - `ConsoleApp::withErrorHandler()` takes a `ConsoleErrorHandlerInterface`, which reports exceptions from commands and returns the exit code, like `WebApp::withErrorHandler()` does for web requests. Without one, exceptions are rethrown, as before.
@@ -108,7 +112,8 @@ This release makes many breaking changes to prepare the API for 1.0. Read "Upgra
 
 - Replaced the HTTP response emitter from `jasny/http-message` with the package's own `HttpResponseEmitter`.
 
-[Unreleased]: https://github.com/rkistaps/the-app/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/rkistaps/the-app/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/rkistaps/the-app/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/rkistaps/the-app/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/rkistaps/the-app/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/rkistaps/the-app/compare/v0.4.1...v0.5.0
