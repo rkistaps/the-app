@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TheApp\Apps;
 
-use Psr\Container\ContainerInterface;
+use DI\Container;
 use TheApp\Components\CommandRunner;
 use TheApp\Components\ConsoleInputParser;
 use TheApp\Exceptions\InvalidCommandInputException;
@@ -25,7 +25,7 @@ class ConsoleApp extends App
     public function __construct(
         CommandRunner $commandRunner,
         ConsoleInputParser $inputParser,
-        ContainerInterface $container
+        Container $container
     ) {
         parent::__construct($container);
 

@@ -23,7 +23,6 @@ use Throwable;
  */
 class WebApp extends App
 {
-    private Container $diContainer;
     private MiddlewareStackFactory $stackFactory;
     private RequestHandlerFactory $requestHandlerFactory;
 
@@ -41,7 +40,6 @@ class WebApp extends App
     ) {
         parent::__construct($container);
 
-        $this->diContainer = $container;
         $this->stackFactory = $stackFactory;
         $this->requestHandlerFactory = $requestHandlerFactory;
     }
@@ -117,7 +115,7 @@ class WebApp extends App
     {
         if ($this->configuredRouter === null) {
             // A new repository, so apps returned by withRouterConfigurators() don't share routes
-            $router = new Router(new RouteRepository(), $this->requestHandlerFactory, $this->diContainer);
+            $router = new Router(new RouteRepository(), $this->requestHandlerFactory, $this->container);
             foreach ($this->routerConfigurators as $configurator) {
                 $this->resolve($configurator, RouterConfiguratorInterface::class)->configureRouter($router);
             }

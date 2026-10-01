@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace TheApp\Apps;
 
-use Psr\Container\ContainerInterface;
+use DI\Container;
 use TheApp\Exceptions\InvalidConfigException;
 
 abstract class App
 {
-    public function __construct(protected ContainerInterface $container)
+    public function __construct(protected Container $container)
     {
     }
 
