@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TheApp\Structures;
 
+use Psr\Http\Server\MiddlewareInterface;
+
 /**
  * A registered route. The router's get(), post() and other methods return it, so middleware can be added to it.
  */
@@ -24,27 +26,30 @@ class Route
     /** @var string|callable */
     private $handler;
 
-    /** @var array<callable|string> */
+    /** @var array<MiddlewareInterface|callable|string> */
     private array $middlewares = [];
 
     /**
      * @internal Routes are created by the Router
      * @param string[] $methods HTTP methods, such as ['GET']. METHOD_ANY matches every method
+     * @param RouteGroup|null $group The group the route was registered in, whose middleware runs around the route's
      */
     public function __construct(
         array $methods,
         private string $path,
         callable|string $handler,
-        private ?string $name = null
+        private ?string $name = null,
+        private ?RouteGroup $group = null
     ) {
         $this->methods = array_values(array_unique(array_map('strtoupper', $methods)));
         $this->handler = $handler;
     }
 
     /**
-     * Add a middleware, a class name or a callable. Middleware runs in the order it was added.
+     * Add a middleware: a MiddlewareInterface instance, a class name or a callable.
+     * Middleware runs in the order it was added, after the middleware of the route's groups.
      */
-    public function addMiddleware(callable|string $middleware): static
+    public function addMiddleware(MiddlewareInterface|callable|string $middleware): static
     {
         $this->middlewares[] = $middleware;
 
@@ -75,11 +80,16 @@ class Route
     }
 
     /**
-     * @return array<callable|string>
+     * @return array<MiddlewareInterface|callable|string> The middleware of the route's groups, then its own
      */
     public function getMiddlewares(): array
     {
-        return $this->middlewares;
+        return [...($this->group?->getMiddlewares() ?? []), ...$this->middlewares];
+    }
+
+    public function getGroup(): ?RouteGroup
+    {
+        return $this->group;
     }
 
     public function isAnyMethod(): bool

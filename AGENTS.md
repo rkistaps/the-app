@@ -50,20 +50,20 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 | `src/Components` | Runtime pieces: `Router`, `RouteRepository`, `MiddlewareStack`, `RouteHandler`, `CommandRunner`, `HttpResponseEmitter`, and `Callable*` adapters. `ArrayConfig` is a standalone helper that the framework doesn't read |
 | `src/Factories` | Build components from the container |
 | `src/Interfaces` | Extension points (`RouterConfiguratorInterface`, `CommandConfiguratorInterface`, `ErrorHandlerInterface`, and others) |
-| `src/Structures` | Data objects. `Route` is public, with a constructor, getters and `addMiddleware()`. `Command`, `ConsoleInput` and `RouteMatchResult` are internal |
+| `src/Structures` | Data objects. `Route` and `RouteGroup` are public, with getters and `addMiddleware()`; their constructors are internal. `Command`, `ConsoleInput` and `RouteMatchResult` are internal |
 | `src/Exceptions` | `InvalidConfigException`, `NoRouteMatchException`, `MethodNotAllowedException` (extends `NoRouteMatchException`) |
 | `tests` | Mirrors `src/` (for example `tests/Components/RouterTest.php`) |
 
 ## How it works
 
-**App setup is code, not config.** The framework never reads a config file. Apps are set up with immutable `with*` methods: `WebApp::withRouterConfigurators(array)`, `ConsoleApp::withCommandConfigurators(array)`, and `withErrorHandler()` on both. Each accepts class names or instances. `App::resolve()` resolves class names from the container when the app runs, and throws `InvalidConfigException` for the wrong type. Each app builds its own `Router` (with a fresh `RouteRepository`) or clones its `CommandRunner` on first use, and `__clone` resets that cache, so apps returned by `with*` never share routes or commands.
+**App setup is code, not config.** The framework never reads a config file. Apps are set up with immutable `with*` methods: `WebApp::withRouterConfigurators(array)`, `WebApp::withMiddleware(array)`, `ConsoleApp::withCommandConfigurators(array)`, and `withErrorHandler()` on both. Each accepts class names or instances. `App::resolve()` resolves class names from the container when the app runs, and throws `InvalidConfigException` for the wrong type. Each app builds its own `Router` (with a fresh `RouteRepository`) or clones its `CommandRunner` on first use, and `__clone` resets that cache, so apps returned by `with*` never share routes or commands.
 
-**Web request flow.** `AppFactory::web(?Container)` returns the container's `WebApp`, and builds a default PHP-DI container when none is given (`AppFactory::console()` does the same for `ConsoleApp`). `WebApp::run($request)` then does the following:
+**Web request flow.** `AppFactory::web(?Container)` returns the container's `WebApp`, and builds a default PHP-DI container when none is given (`AppFactory::console()` does the same for `ConsoleApp`). `WebApp::run($request)` runs the app's middleware (`withMiddleware()`) around a dispatcher, which does the following:
 
 1. It builds the router from the configurators on first use. `Router::getRouteHandler()` asks `RouteRepository::matchRoute()` for a match. If nothing matches, it throws `NoRouteMatchException`, or `MethodNotAllowedException` when only the method differs (`RouteRepository::findAllowedMethods()`).
-2. The matched route's handler and middlewares are resolved. A callable is wrapped in `CallableRequestHandler` or `CallableMiddleware`. A class name is fetched from the container.
+2. The matched route's handler and middlewares are resolved. A route's middlewares are its groups' (`RouteGroup`, outermost first) followed by its own. `MiddlewareStackFactory::resolve()` resolves every middleware, for the app, groups and routes alike: an instance is used as is, a callable is wrapped in `CallableMiddleware`, and a class name is fetched from the container and type-checked. A callable handler is wrapped in `CallableRequestHandler`.
 3. `MiddlewareStackFactory` builds a `MiddlewareStack`. Route parameters are added as request attributes, and the stack handles the request.
-4. Any `Throwable` goes to the handler from `withErrorHandler()`, together with the request (with the route attributes once a route has matched). Without one, the exception is rethrown.
+4. Any `Throwable` in the dispatcher goes to the handler from `withErrorHandler()`, together with the request (with the route attributes once a route has matched). Its response then passes back through the app's middleware. A `Throwable` from the app's middleware goes to the same handler from `run()`. Without one, exceptions are rethrown.
 
 `HttpResponseEmitter` sends the resulting response.
 

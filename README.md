@@ -146,7 +146,7 @@ $app = AppFactory::web($container)
 `AppFactory::web()` and `AppFactory::console()` take an optional PHP-DI container. Without one, they build a default container, which is enough when your handlers need no container definitions. TheApp uses PHP-DI to autowire handlers and to call callables with their dependencies, so the container must be a `DI\Container`.
 
 How the setup methods behave:
-- **Arguments:** `withRouterConfigurators()` and `withErrorHandler()` accept class names, which are resolved from the container, or ready-made instances.
+- **Arguments:** `withRouterConfigurators()`, `withMiddleware()` and `withErrorHandler()` accept class names, which are resolved from the container, or ready-made instances. `withMiddleware()` also accepts callables.
 - **Immutable:** each returns a new app and leaves the original unchanged.
 - **Type checks:** a class that doesn't implement the expected interface throws `TheApp\Exceptions\InvalidConfigException`.
 - **Lists in a file:** a long list of configurators can live in a file of your choice that returns an array of class names, such as `->withRouterConfigurators(require __DIR__ . '/routes.php')`.
@@ -172,15 +172,21 @@ Point your web server at the front controller for every request that isn't a rea
 
 Paths are matched while still URL-encoded, so an encoded `/` (`%2F`) never ends a segment. Parameter values reach the handler decoded: `/pages/J%C4%81nis` gives `name` the value `Jānis`.
 
-To put a group of routes under a common prefix, call `withBasePath()` in a configurator. It returns a new router that registers into the same route list. The prefix is added to normal paths but not to `*` or `@` paths.
+To put routes under a common prefix, register them in a group. `group()` passes your callback a router that adds the prefix, and returns the group, so you can add middleware to all of its routes at once (see [Middleware](#middleware)). Groups can be nested: prefixes add up. The prefix is added to normal paths but not to `*` or `@` paths.
 
 ```php
 public function configureRouter(Router $router): void
 {
-    $api = $router->withBasePath('/api');
-    $api->get('/users', UserListHandler::class); // matches /api/users
+    $router->group('/admin', function (Router $admin) {
+        $admin->get('/users', UserListHandler::class);    // matches /admin/users
+        $admin->group('/reports', function (Router $reports) {
+            $reports->get('/daily', DailyReportHandler::class); // matches /admin/reports/daily
+        });
+    });
 }
 ```
+
+For a prefix without a group, `withBasePath()` returns a router that adds the prefix and registers into the same route list, as in `$router->withBasePath('/api')->get('/users', UserListHandler::class)`.
 
 ### Generating URLs
 
@@ -203,23 +209,40 @@ Values are URL-encoded, and optional parameters you leave out are dropped. `url(
 
 ### Middleware
 
-Add middleware to a route with `addMiddleware()`. Like handlers, middleware can be a class name or a callable:
+Middleware can be added at three levels:
 
-- **Class name:** the class must implement PSR-15 `MiddlewareInterface` and is resolved from the container.
+- **App:** `WebApp::withMiddleware([...])` runs on every request, before routing, so also for requests no route matches. Use it for CORS, sessions, security headers or request logging.
+- **Group:** `addMiddleware()` on the group that `Router::group()` returns runs for every route in the group, including routes registered before the call.
+- **Route:** `addMiddleware()` on a route runs for that route only.
+
+A request goes through them from the outside in: the app's middleware, then the groups' from the outermost in, then the route's, each in the order it was added. Like handlers, a middleware can be given in three ways:
+
+- **Class name:** the class must implement PSR-15 `MiddlewareInterface` and is resolved from the container. Any other class throws `InvalidConfigException`.
+- **Instance:** a ready-made `MiddlewareInterface` object.
 - **Callable:** it receives the request and the next handler.
-
-Middleware runs in the order it was added.
 
 ```php
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-$router->get('/admin', AdminHandler::class)
-    ->addMiddleware(AuthMiddleware::class)
-    ->addMiddleware(function (ServerRequestInterface $request, RequestHandlerInterface $next) {
-        return $next->handle($request)->withHeader('X-Frame-Options', 'DENY');
-    });
+// In the front controller: every request
+$app = AppFactory::web($container)
+    ->withMiddleware([
+        CorsMiddleware::class,
+        function (ServerRequestInterface $request, RequestHandlerInterface $next) {
+            return $next->handle($request)->withHeader('X-Frame-Options', 'DENY');
+        },
+    ])
+    ->withRouterConfigurators([WebRoutes::class]);
+
+// In a route configurator: a group and a single route
+$router->group('/admin', function (Router $admin) {
+    $admin->get('/users', UserListHandler::class);
+    $admin->post('/users', CreateUserHandler::class)->addMiddleware(CsrfMiddleware::class);
+})->addMiddleware(AuthMiddleware::class);
 ```
+
+When an error handler is set, a route's exception, or a 404 or 405, becomes the error handler's response inside the app's middleware. So app middleware gets that response and can add headers to it too, such as CORS headers on an error. An exception from the app's middleware itself goes to the error handler as well. Without an error handler, exceptions pass through the app's middleware and are rethrown from `run()`.
 
 ### Error handling
 

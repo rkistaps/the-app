@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace TheApp\Components;
 
-use DI\Container;
 use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 use TheApp\Components\Repositories\RouteRepository;
+use TheApp\Factories\MiddlewareStackFactory;
 use TheApp\Factories\RequestHandlerFactory;
 use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Exceptions\MethodNotAllowedException;
 use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Interfaces\RouteHandlerInterface;
 use TheApp\Structures\Route;
+use TheApp\Structures\RouteGroup;
 use TheApp\Structures\RouteMatchResult;
 
 /**
@@ -25,13 +25,16 @@ class Router
 {
     private string $basePath = '';
 
+    /** The group that routes registered through this router belong to */
+    private ?RouteGroup $group = null;
+
     /**
      * @internal Each app builds its own router from its configurators
      */
     public function __construct(
         private RouteRepository $repository,
         private RequestHandlerFactory $requestHandlerFactory,
-        private Container $container
+        private MiddlewareStackFactory $stackFactory
     ) {
     }
 
@@ -41,6 +44,28 @@ class Router
         $router->basePath = $basePath;
 
         return $router;
+    }
+
+    /**
+     * Register routes under a common path prefix, and return the group so middleware can be added to all of
+     * them at once. The callback gets a router that adds the prefix and puts its routes in the group. Groups
+     * can be nested: prefixes add up, and an outer group's middleware runs before an inner group's.
+     *
+     *   $router->group('/admin', function (Router $admin) {
+     *       $admin->get('/users', UserListHandler::class);  // matches /admin/users
+     *   })->addMiddleware(AuthMiddleware::class);
+     *
+     * @param callable(Router): void $routes
+     */
+    public function group(string $prefix, callable $routes): RouteGroup
+    {
+        $group = new RouteGroup($this->basePath . $prefix, $this->group);
+
+        $router = $this->withBasePath($group->getPrefix());
+        $router->group = $group;
+        $routes($router);
+
+        return $group;
     }
 
     public function getBasePath(): string
@@ -91,15 +116,7 @@ class Router
         $requestHandler = $this->requestHandlerFactory->fromRoute($route);
 
         $handler = new RouteHandler($requestHandler);
-        $handler->addMiddlewares(
-            ...
-            array_map(
-                fn($middleware) => is_callable($middleware)
-                    ? new CallableMiddleware($middleware, $this->container)
-                    : $this->container->get($middleware),
-                $route->getMiddlewares()
-            )
-        );
+        $handler->addMiddlewares(...array_map($this->stackFactory->resolve(...), $route->getMiddlewares()));
 
         foreach ($matchResult->getParameters() as $name => $value) {
             $handler->addAttribute($name, $value);
@@ -195,6 +212,6 @@ class Router
      */
     private function buildRoute(array $methods, string $path, callable|string $handler, ?string $name = null): Route
     {
-        return new Route($methods, $path, $handler, $name);
+        return new Route($methods, $path, $handler, $name, $this->group);
     }
 }

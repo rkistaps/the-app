@@ -9,6 +9,7 @@ use InvalidArgumentException;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 use TheApp\Components\Repositories\RouteRepository;
+use TheApp\Factories\MiddlewareStackFactory;
 use TheApp\Factories\RequestHandlerFactory;
 use TheApp\Components\Router;
 use TheApp\Exceptions\MethodNotAllowedException;
@@ -29,7 +30,7 @@ class RouterTest extends MockeryTestCase
         $this->container = Mockery::mock(Container::class);
         $this->requestHandlerFactory = Mockery::mock(RequestHandlerFactory::class);
 
-        $this->router = new Router($this->repository, $this->requestHandlerFactory, $this->container);
+        $this->router = new Router($this->repository, $this->requestHandlerFactory, new MiddlewareStackFactory($this->container));
     }
 
     public function testWithBasePath()
@@ -132,6 +133,53 @@ class RouterTest extends MockeryTestCase
 
         $this->assertEquals('*', $router->any('*', 'Handler')->getPath());
         $this->assertEquals('@^/users/\d+$', $router->get('@^/users/\d+$', 'Handler')->getPath());
+    }
+
+    public function testGroupPrefixesPathsAndPutsRoutesInGroup()
+    {
+        $this->repository->shouldReceive('addRoute');
+        $routes = [];
+
+        $group = $this->router->withBasePath('/api')->group('/admin', function (Router $admin) use (&$routes) {
+            $routes[] = $admin->get('/users', 'Handler');
+            $routes[] = $admin->any('*', 'Handler');
+        });
+
+        $this->assertSame('/api/admin', $group->getPrefix());
+        $this->assertSame('/api/admin/users', $routes[0]->getPath());
+        $this->assertSame('*', $routes[1]->getPath());
+        $this->assertSame($group, $routes[0]->getGroup());
+    }
+
+    public function testRoutesOutsideGroupAreNotInIt()
+    {
+        $this->repository->shouldReceive('addRoute');
+
+        $this->router->group('/admin', function (Router $admin) {
+            $admin->get('/users', 'Handler');
+        });
+        $route = $this->router->get('/users', 'Handler');
+
+        $this->assertSame('/users', $route->getPath());
+        $this->assertNull($route->getGroup());
+    }
+
+    public function testNestedGroupsAddUpPrefixesAndMiddleware()
+    {
+        $this->repository->shouldReceive('addRoute');
+        $route = null;
+
+        $outer = $this->router->group('/admin', function (Router $admin) use (&$route, &$inner) {
+            $inner = $admin->group('/reports', function (Router $reports) use (&$route) {
+                $route = $reports->get('/daily', 'Handler')->addMiddleware('RouteMiddleware');
+            });
+            $inner->addMiddleware('InnerMiddleware');
+        });
+        // Added after the routes were registered, and still applied
+        $outer->addMiddleware('OuterMiddleware');
+
+        $this->assertSame('/admin/reports/daily', $route->getPath());
+        $this->assertSame(['OuterMiddleware', 'InnerMiddleware', 'RouteMiddleware'], $route->getMiddlewares());
     }
 
     protected function tearDown(): void
