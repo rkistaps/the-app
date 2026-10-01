@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-01
+
+This release adds what production apps need on top of the 0.8 API: middleware for the whole app, route groups, and console output. All of it is additive; the one behaviour change is that the console app's own messages go to standard error.
+
 ### Added
 
 - `WebApp::withMiddleware(array)` adds middleware that runs on every request, before routing, so also for requests no route matches. Use it for CORS, sessions, security headers or request logging. With an error handler set, error responses, including 404 and 405, pass back through this middleware, so it can add headers to them too.
@@ -124,7 +128,8 @@ This release makes many breaking changes to prepare the API for 1.0. Read "Upgra
 
 - Replaced the HTTP response emitter from `jasny/http-message` with the package's own `HttpResponseEmitter`.
 
-[Unreleased]: https://github.com/rkistaps/the-app/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/rkistaps/the-app/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/rkistaps/the-app/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/rkistaps/the-app/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/rkistaps/the-app/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/rkistaps/the-app/compare/v0.5.0...v0.6.0
