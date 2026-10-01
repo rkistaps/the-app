@@ -7,6 +7,8 @@ namespace TheApp\Apps;
 use DI\Container;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use TheApp\Components\CallableRequestHandler;
 use TheApp\Components\Repositories\RouteRepository;
 use TheApp\Components\Router;
 use TheApp\Exceptions\InvalidConfigException;
@@ -17,8 +19,7 @@ use TheApp\Interfaces\RouterConfiguratorInterface;
 use Throwable;
 
 /**
- * Class WebApp
- * @package TheApp\Apps
+ * Routes PSR-7 requests through the app's middleware and the matched route's middleware to its handler
  */
 class WebApp extends App
 {
@@ -27,6 +28,9 @@ class WebApp extends App
 
     /** @var array<RouterConfiguratorInterface|string> */
     private array $routerConfigurators = [];
+
+    /** @var array<MiddlewareInterface|callable|string> */
+    private array $middlewares = [];
     private ErrorHandlerInterface|string|null $errorHandler = null;
 
     /** Router with the configurators applied, built on first use */
@@ -63,6 +67,22 @@ class WebApp extends App
     }
 
     /**
+     * Return a new app that also runs the given middleware on every request, before routing, so also for
+     * requests that no route matches. Each is a MiddlewareInterface instance, a class name resolved from
+     * the container, or a callable that gets the request and the next handler. They run in the given order,
+     * around the route's own middleware.
+     *
+     * @param array<MiddlewareInterface|callable|string> $middlewares
+     */
+    public function withMiddleware(array $middlewares): static
+    {
+        $app = clone $this;
+        $app->middlewares = [...$this->middlewares, ...array_values($middlewares)];
+
+        return $app;
+    }
+
+    /**
      * Return a new app that turns uncaught exceptions into responses with the given handler.
      * Without one, exceptions are rethrown. A class name is resolved from the container on the first error.
      */
@@ -75,11 +95,30 @@ class WebApp extends App
     }
 
     /**
-     * Route the request through its route's middleware to its handler
+     * Route the request through the app's middleware and its route's middleware to its handler
      *
      * @throws Throwable When no error handler is set
      */
     public function run(ServerRequestInterface $request): ResponseInterface
+    {
+        try {
+            $dispatcher = new CallableRequestHandler(fn(ServerRequestInterface $request) => $this->dispatch($request), $this->container);
+
+            return $this->stackFactory->build($dispatcher, $this->middlewares)->handle($request);
+        } catch (Throwable $throwable) {
+            // An exception from the app's own middleware, which runs outside dispatch()
+            return $this->handleErrors($throwable, $request);
+        }
+    }
+
+    /**
+     * Match the route and run its middleware and handler. Exceptions become the error handler's response
+     * here, inside the app's middleware, so that middleware also sees and can change error responses,
+     * such as by adding CORS or security headers to a 404.
+     *
+     * @throws Throwable When no error handler is set
+     */
+    private function dispatch(ServerRequestInterface $request): ResponseInterface
     {
         try {
             $router = $this->getRouter();
@@ -93,12 +132,10 @@ class WebApp extends App
                 $request = $request->withAttribute($name, $value);
             }
 
-            $response = $stack->handle($request);
+            return $stack->handle($request);
         } catch (Throwable $throwable) {
-            $response = $this->handleErrors($throwable, $request);
+            return $this->handleErrors($throwable, $request);
         }
-
-        return $response;
     }
 
     /**
@@ -108,7 +145,7 @@ class WebApp extends App
     {
         if ($this->configuredRouter === null) {
             // A new repository, so apps returned by withRouterConfigurators() don't share routes
-            $router = new Router(new RouteRepository(), $this->requestHandlerFactory, $this->container);
+            $router = new Router(new RouteRepository(), $this->requestHandlerFactory, $this->stackFactory);
             foreach ($this->routerConfigurators as $configurator) {
                 $this->resolve($configurator, RouterConfiguratorInterface::class)->configureRouter($router);
             }

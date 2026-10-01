@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- `WebApp::withMiddleware(array)` adds middleware that runs on every request, before routing, so also for requests no route matches. Use it for CORS, sessions, security headers or request logging. With an error handler set, error responses, including 404 and 405, pass back through this middleware, so it can add headers to them too.
+- `Router::group($prefix, $callback)` registers routes under a common prefix and returns a `RouteGroup`, whose `addMiddleware()` adds middleware to every route in the group. Groups can be nested; prefixes add up, and an outer group's middleware runs first.
+- `Route::addMiddleware()` and `RouteGroup::addMiddleware()` accept `MiddlewareInterface` instances, besides class names and callables.
+
+### Changed
+
+- A route middleware class name that resolves to something other than a `MiddlewareInterface` throws `InvalidConfigException`, like configurators and error handlers do. Before, it failed with a `TypeError`.
+
 ## [0.8.0] - 2026-10-01
 
 This release settles the public API for 1.0 and makes several breaking changes. Each one below says what to change in your project.
