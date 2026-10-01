@@ -9,6 +9,17 @@ use TheApp\Structures\Route;
 
 class RouteTest extends MockeryTestCase
 {
+    public function testConstructorKeepsValuesAndNormalizesMethods()
+    {
+        $route = new Route(['get', 'post', 'GET'], '/users', 'Handler', 'users');
+
+        $this->assertSame(['GET', 'POST'], $route->getMethods());
+        $this->assertSame('/users', $route->getPath());
+        $this->assertSame('Handler', $route->getHandler());
+        $this->assertSame('users', $route->getName());
+        $this->assertSame([], $route->getMiddlewares());
+    }
+
     public function testAllowsListedMethodsCaseInsensitively()
     {
         $route = $this->route([Route::METHOD_PUT, Route::METHOD_PATCH]);
@@ -36,39 +47,33 @@ class RouteTest extends MockeryTestCase
 
     public function testPathKinds()
     {
-        $route = $this->route([Route::METHOD_GET]);
+        $anyPath = $this->route([Route::METHOD_GET], '*');
+        $this->assertTrue($anyPath->isForAnyPath());
+        $this->assertFalse($anyPath->isCustomPath());
 
-        $route->path = '*';
-        $this->assertTrue($route->isForAnyPath());
-        $this->assertFalse($route->isCustomPath());
+        $regex = $this->route([Route::METHOD_GET], '@^/legacy$');
+        $this->assertTrue($regex->isCustomPath());
+        $this->assertFalse($regex->hasParameters());
 
-        $route->path = '@^/legacy$';
-        $this->assertTrue($route->isCustomPath());
-        $this->assertFalse($route->hasParameters());
-
-        $route->path = '/users/[i:id]';
-        $this->assertFalse($route->isForAnyPath());
-        $this->assertTrue($route->hasParameters());
+        $parameters = $this->route([Route::METHOD_GET], '/users/[i:id]');
+        $this->assertFalse($parameters->isForAnyPath());
+        $this->assertTrue($parameters->hasParameters());
     }
 
-    public function testWithMiddlewareAppendsAndReturnsRoute()
+    public function testAddMiddlewareAppendsAndReturnsRoute()
     {
         $route = $this->route([Route::METHOD_GET]);
         $callable = fn() => null;
 
-        $this->assertSame($route, $route->withMiddleware('Auth')->withMiddleware($callable));
-        $this->assertSame(['Auth', $callable], $route->middlewares);
+        $this->assertSame($route, $route->addMiddleware('Auth')->addMiddleware($callable));
+        $this->assertSame(['Auth', $callable], $route->getMiddlewares());
     }
 
     /**
      * @param string[] $methods
      */
-    private function route(array $methods): Route
+    private function route(array $methods, string $path = '/'): Route
     {
-        $route = new Route();
-        $route->methods = $methods;
-        $route->path = '/';
-
-        return $route;
+        return new Route($methods, $path, 'Handler');
     }
 }

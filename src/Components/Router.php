@@ -97,7 +97,7 @@ class Router
                 fn($middleware) => is_callable($middleware)
                     ? new CallableMiddleware($middleware, $this->container)
                     : $this->container->get($middleware),
-                $route->middlewares
+                $route->getMiddlewares()
             )
         );
 
@@ -195,12 +195,6 @@ class Router
      */
     protected function buildRoute(array $methods, string $path, callable|string $handler, ?string $name = null): Route
     {
-        $route = new Route();
-        $route->methods = array_values(array_unique(array_map('strtoupper', $methods)));
-        $route->path = $path;
-        $route->handler = $handler;
-        $route->name = $name;
-
-        return $route;
+        return new Route($methods, $path, $handler, $name);
     }
 }

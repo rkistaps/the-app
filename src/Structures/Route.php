@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TheApp\Structures;
 
+/**
+ * A registered route. The router's get(), post() and other methods return it, so middleware can be added to it.
+ */
 class Route
 {
     public const METHOD_GET = 'GET';
@@ -15,27 +18,68 @@ class Route
     public const METHOD_OPTIONS = 'OPTIONS';
     public const METHOD_ANY = 'ANY';
 
-    public string $path;
-    public ?string $name = null;
-
     /** @var string[] Upper-case HTTP methods. METHOD_ANY matches every method */
-    public array $methods = [self::METHOD_ANY];
+    private array $methods;
 
     /** @var string|callable */
-    public $handler;
+    private $handler;
 
     /** @var array<callable|string> */
-    public array $middlewares = [];
+    private array $middlewares = [];
 
     /**
-     * @param callable|string $middleware
-     * @return $this
+     * @internal Routes are created by the Router
+     * @param string[] $methods HTTP methods, such as ['GET']. METHOD_ANY matches every method
      */
-    public function withMiddleware($middleware): Route
+    public function __construct(
+        array $methods,
+        private string $path,
+        callable|string $handler,
+        private ?string $name = null
+    ) {
+        $this->methods = array_values(array_unique(array_map('strtoupper', $methods)));
+        $this->handler = $handler;
+    }
+
+    /**
+     * Add a middleware, a class name or a callable. Middleware runs in the order it was added.
+     */
+    public function addMiddleware(callable|string $middleware): static
     {
         $this->middlewares[] = $middleware;
 
         return $this;
+    }
+
+    /**
+     * @return string[] Upper-case HTTP methods. METHOD_ANY matches every method
+     */
+    public function getMethods(): array
+    {
+        return $this->methods;
+    }
+
+    public function getPath(): string
+    {
+        return $this->path;
+    }
+
+    public function getHandler(): callable|string
+    {
+        return $this->handler;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return array<callable|string>
+     */
+    public function getMiddlewares(): array
+    {
+        return $this->middlewares;
     }
 
     public function isAnyMethod(): bool
@@ -67,6 +111,6 @@ class Route
 
     public function hasParameters(): bool
     {
-        return strpos($this->path, '[') !== false;
+        return str_contains($this->path, '[');
     }
 }

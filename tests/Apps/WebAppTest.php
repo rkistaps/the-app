@@ -75,8 +75,8 @@ class WebAppTest extends MockeryTestCase
 
         $app = $this->app->withRouterConfigurators([$this->routes(function (Router $router) use (&$calls) {
             $router->get('/admin', fn() => $this->response)
-                ->withMiddleware('authMiddleware')
-                ->withMiddleware(function (ServerRequestInterface $request, RequestHandlerInterface $next) use (&$calls) {
+                ->addMiddleware('authMiddleware')
+                ->addMiddleware(function (ServerRequestInterface $request, RequestHandlerInterface $next) use (&$calls) {
                     $calls[] = 'callable';
                     return $next->handle($request);
                 });

@@ -50,7 +50,7 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 | `src/Components` | Runtime pieces: `Router`, `RouteRepository`, `MiddlewareStack`, `RouteHandler`, `CommandRunner`, `HttpResponseEmitter`, and `Callable*` adapters. `ArrayConfig` is a standalone helper that the framework doesn't read |
 | `src/Factories` | Build components from the container |
 | `src/Interfaces` | Extension points (`RouterConfiguratorInterface`, `CommandConfiguratorInterface`, `ErrorHandlerInterface`, and others) |
-| `src/Structures` | Plain data objects with public properties (`Route`, `Command`, `RouteMatchResult`) |
+| `src/Structures` | Data objects. `Route` is public, with a constructor, getters and `addMiddleware()`. `Command`, `ConsoleInput` and `RouteMatchResult` are internal |
 | `src/Exceptions` | `InvalidConfigException`, `NoRouteMatchException`, `MethodNotAllowedException` (extends `NoRouteMatchException`) |
 | `tests` | Mirrors `src/` (for example `tests/Components/RouterTest.php`) |
 
@@ -78,7 +78,7 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 
 - Resolve dependencies through the container or constructor injection. Don't use `new` for services. Handlers and middlewares may be a class name or a callable, so support both when adding new extension points.
 - Don't make the framework read config keys. New setup options are `with*` methods on the app that accept a class name or an instance and resolve it with `App::resolve()`, which checks the type.
-- `Router::withBasePath()` is immutable and returns a clone. Keep "with" methods immutable.
+- `Router::withBasePath()` is immutable and returns a clone. Keep "with" methods immutable, and name methods that change the object `add*`, as in `Route::addMiddleware()`.
 - Every PHP file starts with `declare(strict_types=1);`.
 - Classes aren't `final`, so projects can extend any of them. That makes `protected` methods of public classes part of the public API: use `private` for anything that isn't meant to be overridden.
 - Style is PSR-12. Newer code uses typed properties and constructor property promotion (see `Router`), while older code declares properties explicitly. Match the file you're editing, and prefer typed signatures in new code.

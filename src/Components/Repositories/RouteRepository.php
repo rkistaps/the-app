@@ -42,7 +42,7 @@ class RouteRepository
     public function findRouteByName(string $name): ?Route
     {
         foreach ($this->routes as $route) {
-            if ($route->name === $name) {
+            if ($route->getName() === $name) {
                 return $route;
             }
         }
@@ -59,13 +59,13 @@ class RouteRepository
      */
     public function buildPath(Route $route, array $parameters = []): string
     {
-        $routeName = $route->name ?? $route->path;
+        $routeName = $route->getName() ?? $route->getPath();
 
         if ($route->isForAnyPath() || $route->isCustomPath()) {
             throw new InvalidArgumentException(sprintf('Cannot build a path for route "%s": "*" and "@" regex paths are not supported', $routeName));
         }
 
-        $path = $route->path;
+        $path = $route->getPath();
         if (!preg_match_all(self::PARAMETER_PATTERN, $path, $matches, PREG_SET_ORDER)) {
             return $path;
         }
@@ -130,8 +130,8 @@ class RouteRepository
                 continue;
             }
 
-            $methods = [...$methods, ...$route->methods];
-            if (in_array(Route::METHOD_GET, $route->methods, true)) {
+            $methods = [...$methods, ...$route->getMethods()];
+            if (in_array(Route::METHOD_GET, $route->getMethods(), true)) {
                 $methods[] = Route::METHOD_HEAD;
             }
         }
@@ -154,20 +154,20 @@ class RouteRepository
 
         if ($route->isCustomPath()) {
             // remove "@" regex delimiter
-            $pattern = '`' . substr($route->path, 1) . '`u';
+            $pattern = '`' . substr($route->getPath(), 1) . '`u';
             $isMatch = preg_match($pattern, $requestPath, $parameters) === 1;
-        } elseif (($position = strpos($route->path, '[')) === false) {
+        } elseif (($position = strpos($route->getPath(), '[')) === false) {
             // No params in url, do string comparison
-            return strcmp($requestPath, $route->path) === 0 ? [] : null;
+            return strcmp($requestPath, $route->getPath()) === 0 ? [] : null;
         } else {
             // Compare longest non-param string with url before moving on to regex
             // Check if last character before param is a slash, because it could be optional if param is optional too (see https://github.com/dannyvankooten/AltoRouter/issues/241)
             $lastRequestUrlChar = $requestPath !== '' ? $requestPath[strlen($requestPath) - 1] : '';
-            if (strncmp($requestPath, $route->path, $position) !== 0 && ($lastRequestUrlChar === '/' || $route->path[$position - 1] !== '/')) {
+            if (strncmp($requestPath, $route->getPath(), $position) !== 0 && ($lastRequestUrlChar === '/' || $route->getPath()[$position - 1] !== '/')) {
                 return null;
             }
 
-            $regex = $this->compileRoute($route->path);
+            $regex = $this->compileRoute($route->getPath());
             $isMatch = preg_match($regex, $requestPath, $parameters) === 1;
         }
 

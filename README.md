@@ -203,7 +203,7 @@ Values are URL-encoded, and optional parameters you leave out are dropped. `url(
 
 ### Middleware
 
-Add middleware to a route with `withMiddleware()`. Like handlers, middleware can be a class name or a callable:
+Add middleware to a route with `addMiddleware()`. Like handlers, middleware can be a class name or a callable:
 
 - **Class name:** the class must implement PSR-15 `MiddlewareInterface` and is resolved from the container.
 - **Callable:** it receives the request and the next handler.
@@ -215,8 +215,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 $router->get('/admin', AdminHandler::class)
-    ->withMiddleware(AuthMiddleware::class)
-    ->withMiddleware(function (ServerRequestInterface $request, RequestHandlerInterface $next) {
+    ->addMiddleware(AuthMiddleware::class)
+    ->addMiddleware(function (ServerRequestInterface $request, RequestHandlerInterface $next) {
         return $next->handle($request)->withHeader('X-Frame-Options', 'DENY');
     });
 ```

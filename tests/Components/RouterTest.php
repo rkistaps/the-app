@@ -74,7 +74,7 @@ class RouterTest extends MockeryTestCase
 
     public function testUrlBuildsPathOfNamedRoute()
     {
-        $route = new Route();
+        $route = new Route([Route::METHOD_GET], '/users/[i:id]', 'Handler', 'user');
         $this->repository->shouldReceive('findRouteByName')->with('user')->andReturn($route);
         $this->repository->shouldReceive('buildPath')->with($route, ['id' => 5])->andReturn('/users/5');
 
@@ -95,13 +95,13 @@ class RouterTest extends MockeryTestCase
     {
         $this->repository->shouldReceive('addRoute')->times(7);
 
-        $this->assertSame(['GET'], $this->router->get('/a', 'Handler')->methods);
-        $this->assertSame(['POST'], $this->router->post('/a', 'Handler')->methods);
-        $this->assertSame(['PUT'], $this->router->put('/a', 'Handler')->methods);
-        $this->assertSame(['PATCH'], $this->router->patch('/a', 'Handler')->methods);
-        $this->assertSame(['DELETE'], $this->router->delete('/a', 'Handler')->methods);
-        $this->assertSame(['OPTIONS'], $this->router->options('/a', 'Handler')->methods);
-        $this->assertSame(['ANY'], $this->router->any('/a', 'Handler')->methods);
+        $this->assertSame(['GET'], $this->router->get('/a', 'Handler')->getMethods());
+        $this->assertSame(['POST'], $this->router->post('/a', 'Handler')->getMethods());
+        $this->assertSame(['PUT'], $this->router->put('/a', 'Handler')->getMethods());
+        $this->assertSame(['PATCH'], $this->router->patch('/a', 'Handler')->getMethods());
+        $this->assertSame(['DELETE'], $this->router->delete('/a', 'Handler')->getMethods());
+        $this->assertSame(['OPTIONS'], $this->router->options('/a', 'Handler')->getMethods());
+        $this->assertSame(['ANY'], $this->router->any('/a', 'Handler')->getMethods());
     }
 
     public function testMapRegistersRouteForSeveralMethods()
@@ -110,9 +110,9 @@ class RouterTest extends MockeryTestCase
 
         $route = $this->router->map(['get', 'POST', 'GET'], '/users', 'Handler', 'users');
 
-        $this->assertSame(['GET', 'POST'], $route->methods);
-        $this->assertSame('/users', $route->path);
-        $this->assertSame('users', $route->name);
+        $this->assertSame(['GET', 'POST'], $route->getMethods());
+        $this->assertSame('/users', $route->getPath());
+        $this->assertSame('users', $route->getName());
     }
 
     public function testRouteMethodsApplyBasePath()
@@ -120,9 +120,9 @@ class RouterTest extends MockeryTestCase
         $this->repository->shouldReceive('addRoute');
         $router = $this->router->withBasePath('/api');
 
-        $this->assertEquals('/api/users', $router->get('/users', 'Handler')->path);
-        $this->assertEquals('/api/users', $router->post('/users', 'Handler')->path);
-        $this->assertEquals('/api/users', $router->any('/users', 'Handler')->path);
+        $this->assertEquals('/api/users', $router->get('/users', 'Handler')->getPath());
+        $this->assertEquals('/api/users', $router->post('/users', 'Handler')->getPath());
+        $this->assertEquals('/api/users', $router->any('/users', 'Handler')->getPath());
     }
 
     public function testBasePathSkipsAnyAndCustomPaths()
@@ -130,8 +130,8 @@ class RouterTest extends MockeryTestCase
         $this->repository->shouldReceive('addRoute');
         $router = $this->router->withBasePath('/api');
 
-        $this->assertEquals('*', $router->any('*', 'Handler')->path);
-        $this->assertEquals('@^/users/\d+$', $router->get('@^/users/\d+$', 'Handler')->path);
+        $this->assertEquals('*', $router->any('*', 'Handler')->getPath());
+        $this->assertEquals('@^/users/\d+$', $router->get('@^/users/\d+$', 'Handler')->getPath());
     }
 
     protected function tearDown(): void

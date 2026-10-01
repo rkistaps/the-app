@@ -202,11 +202,7 @@ class RouteRepositoryTest extends MockeryTestCase
      */
     private function addRoute(array $methods, string $path, ?string $name = null): Route
     {
-        $route = new Route();
-        $route->methods = $methods;
-        $route->path = $path;
-        $route->name = $name;
-        $route->handler = 'Handler';
+        $route = new Route($methods, $path, 'Handler', $name);
 
         $this->repository->addRoute($route);
 

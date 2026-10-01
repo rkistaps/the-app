@@ -42,9 +42,11 @@ class RequestHandlerFactory
      */
     public function fromRoute(Route $route): RequestHandlerInterface
     {
-        return is_callable($route->handler)
-            ? $this->getCallableRequestHandler($route->handler)
-            : $this->getHandlerInstance($route->handler);
+        $handler = $route->getHandler();
+
+        return is_callable($handler)
+            ? $this->getCallableRequestHandler($handler)
+            : $this->getHandlerInstance($handler);
     }
 
     public function getCallableRequestHandler(callable $callable): RequestHandlerInterface

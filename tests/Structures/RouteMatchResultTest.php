@@ -12,8 +12,8 @@ class RouteMatchResultTest extends MockeryTestCase
 {
     public function testGettersAndSetters()
     {
-        $route = new Route();
-        $other = new Route();
+        $route = new Route([Route::METHOD_GET], '/a', 'Handler');
+        $other = new Route([Route::METHOD_GET], '/b', 'Handler');
 
         $result = new RouteMatchResult($route, ['id' => '5']);
 

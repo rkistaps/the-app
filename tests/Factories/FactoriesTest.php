@@ -127,11 +127,7 @@ class FactoriesTest extends MockeryTestCase
 
     private function route(callable|string $handler): Route
     {
-        $route = new Route();
-        $route->path = '/';
-        $route->handler = $handler;
-
-        return $route;
+        return new Route([Route::METHOD_GET], '/', $handler);
     }
 
     private function command(callable|string $handler): Command
