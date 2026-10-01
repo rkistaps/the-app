@@ -140,7 +140,7 @@ class RouteRepository
     /**
      * Match a route's path against the request path
      *
-     * @return array<string, string>|null Named parameters when the path matches, null otherwise
+     * @return array<string, string>|null Named parameters, URL-decoded, when the path matches, null otherwise
      */
     protected function matchPath(Route $route, string $requestPath): ?array
     {
@@ -173,7 +173,12 @@ class RouteRepository
             return null;
         }
 
-        return array_filter($parameters, fn($key) => !is_numeric($key), ARRAY_FILTER_USE_KEY);
+        // The path is matched while still encoded, so an encoded "/" (%2F) can't end a segment.
+        // The values are decoded afterwards, the reverse of what buildPath() does.
+        return array_map(
+            'rawurldecode',
+            array_filter($parameters, fn($key) => !is_numeric($key), ARRAY_FILTER_USE_KEY)
+        );
     }
 
     /**

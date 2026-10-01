@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Fixed
 
 - A middleware that calls the next handler more than once, such as a retry, no longer skips middleware on the later calls. Before, each call removed one middleware from the stack, so the second call left out the middleware after it.
+- **Breaking:** route parameters are now URL-decoded, the reverse of `Router::url()`. A request to `/pages/J%C4%81nis` used to give `name` the value `J%C4%81nis`; it now gives `Jānis`. If a handler decodes parameters itself, remove that, or values containing `%` are decoded twice.
 
 ## [0.6.0] - 2026-10-01
 

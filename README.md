@@ -171,6 +171,8 @@ Point your web server at the front controller for every request that isn't a rea
 | `@^/legacy/(?<id>\d+)$` | A raw regex, marked with a leading `@`. Named groups become request attributes |
 | `*` | Every path. Useful as a catch-all registered last |
 
+Paths are matched while still URL-encoded, so an encoded `/` (`%2F`) never ends a segment. Parameter values reach the handler decoded: `/pages/J%C4%81nis` gives `name` the value `Jānis`.
+
 To put a group of routes under a common prefix, call `withBasePath()` in a configurator. It returns a new router that registers into the same route list. The prefix is added to normal paths but not to `*` or `@` paths.
 
 ```php

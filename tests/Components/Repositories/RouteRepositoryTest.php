@@ -45,6 +45,11 @@ class RouteRepositoryTest extends MockeryTestCase
         yield 'raw regex mismatch' => ['@^/legacy/(?<id>\d+)$', '/legacy/x', null];
         yield 'any path' => ['*', '/anything/at/all', []];
         yield 'different prefix' => ['/users/[i:id]', '/people/42', null];
+        yield 'segment is decoded' => ['/pages/[:name]', '/pages/J%C4%81nis%20B', ['name' => 'Jānis B']];
+        yield 'encoded slash stays in segment' => ['/tags/[:tag]', '/tags/a%2Fb', ['tag' => 'a/b']];
+        yield 'plus is not a space' => ['/tags/[:tag]', '/tags/c++', ['tag' => 'c++']];
+        yield 'wildcard is decoded' => ['/files/[**:path]', '/files/docs/my%20file.txt', ['path' => 'docs/my file.txt']];
+        yield 'raw regex is decoded' => ['@^/legacy/(?<name>[^/]+)$', '/legacy/a%20b', ['name' => 'a b']];
     }
 
     /**
@@ -146,6 +151,16 @@ class RouteRepositoryTest extends MockeryTestCase
 
         $this->assertSame($route, $match->getRoute());
         $this->assertSame(['id' => '42', 'tab' => 'posts'], $match->getParameters());
+    }
+
+    public function testEncodedBuiltPathMatchesBackToSameValue()
+    {
+        $route = $this->addRoute([Route::METHOD_GET], '/people/[:name]');
+        $path = $this->repository->buildPath($route, ['name' => 'Jānis Bērziņš']);
+
+        $match = $this->repository->matchRoute($this->request('GET', $path));
+
+        $this->assertSame(['name' => 'Jānis Bērziņš'], $match->getParameters());
     }
 
     public function testBuildPathThrowsForMissingRequiredParameter()
