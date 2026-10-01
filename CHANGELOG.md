@@ -4,7 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- `ConsoleApp::withErrorHandler()` takes a `ConsoleErrorHandlerInterface`, which reports exceptions from commands and returns the exit code, like `WebApp::withErrorHandler()` does for web requests. Without one, exceptions are rethrown, as before.
+
 ### Changed
+
+- **Breaking:** `CommandHandlerInterface::handle()` returns the command's exit code as an `int` instead of `void`, and `ConsoleApp::run()` returns it. Add `: int` to your command classes and return `0` on success. Callable commands can return an `int` too; any other return value, or none, still counts as `0`.
 
 - **Breaking:** `ErrorHandlerInterface::handle()` also gets the request: `handle(Throwable $throwable, ServerRequestInterface $request)`. An error handler can now answer depending on the request, such as JSON for API paths, without a second app. Add the parameter to your error handlers.
 - **Breaking:** `ConsoleApp` and the `App` base class take a `DI\Container` instead of any PSR-11 `ContainerInterface`, like `WebApp` already did. Apps from `AppFactory` or the container are unaffected; only code that constructs `ConsoleApp` itself with another container needs a PHP-DI one.

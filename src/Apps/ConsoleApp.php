@@ -10,6 +10,8 @@ use TheApp\Components\ConsoleInputParser;
 use TheApp\Exceptions\InvalidCommandInputException;
 use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Interfaces\CommandConfiguratorInterface;
+use TheApp\Interfaces\ConsoleErrorHandlerInterface;
+use Throwable;
 
 class ConsoleApp extends App
 {
@@ -18,6 +20,7 @@ class ConsoleApp extends App
 
     /** @var array<CommandConfiguratorInterface|string> */
     private array $commandConfigurators = [];
+    private ConsoleErrorHandlerInterface|string|null $errorHandler = null;
 
     /** Command runner with the configurators applied, built on first use */
     private ?CommandRunner $configuredCommandRunner = null;
@@ -53,17 +56,29 @@ class ConsoleApp extends App
     }
 
     /**
+     * Return a new app that reports exceptions from commands with the given handler, which also chooses the
+     * exit code. Without one, exceptions are rethrown. A class name is resolved from the container on the first error.
+     */
+    public function withErrorHandler(ConsoleErrorHandlerInterface|string $errorHandler): static
+    {
+        $app = clone $this;
+        $app->errorHandler = $errorHandler;
+
+        return $app;
+    }
+
+    /**
      * Run the command named by the arguments, such as ['console.php', 'user/greet', '--name=World']
      *
      * @param string[] $argv Arguments as in PHP's $argv, where the first element is the script name
-     * @return int Exit code: 0 on success, 1 when the command isn't found or its input is invalid
-     * @throws InvalidConfigException
+     * @return int Exit code: the command's own, 1 when the command isn't found or its input is invalid,
+     *     or the error handler's when the command throws
+     * @throws Throwable When no error handler is set
      */
     public function run(array $argv): int
     {
-        $commandRunner = $this->getCommandRunner();
-
         try {
+            $commandRunner = $this->getCommandRunner();
             $input = $this->inputParser->parse($argv);
             $command = $input->command !== null ? $commandRunner->findCommandByName($input->command) : null;
             if (!$command) {
@@ -71,13 +86,27 @@ class ConsoleApp extends App
                 return 1;
             }
 
-            $commandRunner->runCommand($command, $input->options);
+            return $commandRunner->runCommand($command, $input->options);
         } catch (InvalidCommandInputException $exception) {
+            // A mistake by the person running the command, so the message is all they need
             echo $exception->getMessage() . PHP_EOL;
             return 1;
+        } catch (Throwable $throwable) {
+            return $this->handleErrors($throwable, $argv);
+        }
+    }
+
+    /**
+     * @param string[] $argv
+     * @throws Throwable When no error handler is set
+     */
+    private function handleErrors(Throwable $throwable, array $argv): int
+    {
+        if ($this->errorHandler === null) {
+            throw $throwable;
         }
 
-        return 0;
+        return $this->resolve($this->errorHandler, ConsoleErrorHandlerInterface::class)->handle($throwable, $argv);
     }
 
     /**

@@ -37,6 +37,18 @@ class CallableCommandHandlerTest extends MockeryTestCase
         $this->assertSame([false, false, false, false, false, true, true, true, true, true, false], $received);
     }
 
+    public function testIntReturnValueIsExitCode()
+    {
+        $this->assertSame(3, $this->handler(fn() => 3)->handle());
+    }
+
+    public function testOtherReturnValuesAreExitCodeZero()
+    {
+        $this->assertSame(0, $this->handler(function () {
+        })->handle());
+        $this->assertSame(0, $this->handler(fn() => 'done')->handle());
+    }
+
     public function testNumericOptions()
     {
         $received = null;

@@ -308,8 +308,8 @@ Commands are registered by *command configurators*, which are classes implementi
 
 A command handler is either a callable or a class name:
 
-- **Callable:** command-line options are matched to its parameters by name and converted to the parameter's type. Parameters not passed on the command line use their default value, or are resolved from the container if they have a class type.
-- **Class name:** the class must implement `CommandHandlerInterface`, and its `handle()` method receives all options as an array of strings. A flag without a value is `true`.
+- **Callable:** command-line options are matched to its parameters by name and converted to the parameter's type. Parameters not passed on the command line use their default value, or are resolved from the container if they have a class type. It can return an `int` exit code; any other return value, or none, counts as `0`.
+- **Class name:** the class must implement `CommandHandlerInterface`, and its `handle()` method receives all options as an array of strings and returns the exit code. A flag without a value is `true`.
 
 ```php
 namespace Acme\Console;
@@ -339,10 +339,17 @@ use TheApp\Interfaces\CommandHandlerInterface;
 
 final class ImportUsersCommand implements CommandHandlerInterface
 {
-    public function handle(array $params = []): void
+    public function handle(array $params = []): int
     {
         $file = $params['file'] ?? 'users.csv';
+        if (!is_readable($file)) {
+            echo "Cannot read {$file}" . PHP_EOL;
+            return 1;
+        }
+
         echo "Importing users from {$file}" . PHP_EOL;
+
+        return 0;
     }
 }
 ```
@@ -385,7 +392,39 @@ For callable commands, option values are converted to the parameter's type:
 | `float` | Numbers, such as `--fee=0.002` |
 | `string` | Any value. A flag without a value is rejected |
 
-`run()` returns `0` on success and `1` when the command isn't found or its input is invalid. In the second case, it prints a message such as `Missing required option --name` or `Option --times expects an integer`.
+`run()` returns the command's exit code. It returns `1` when the command isn't found or its input is invalid, and in the second case prints a message such as `Missing required option --name` or `Option --times expects an integer`.
+
+Any other exception from a command goes to the handler set with `withErrorHandler()`, which reports it and returns the exit code. Without one, the exception is rethrown from `run()`, and PHP prints it and exits with code 255.
+
+```php
+namespace Acme\Console;
+
+use Psr\Log\LoggerInterface;
+use TheApp\Interfaces\ConsoleErrorHandlerInterface;
+use Throwable;
+
+final class ConsoleErrorHandler implements ConsoleErrorHandlerInterface
+{
+    public function __construct(private LoggerInterface $logger)
+    {
+    }
+
+    public function handle(Throwable $throwable, array $argv): int
+    {
+        $this->logger->error('Command failed: ' . implode(' ', $argv), ['exception' => $throwable]);
+        fwrite(STDERR, $throwable->getMessage() . PHP_EOL);
+
+        return 1;
+    }
+}
+```
+
+```php
+$exitCode = AppFactory::console($container)
+    ->withCommandConfigurators([UserCommands::class])
+    ->withErrorHandler(ConsoleErrorHandler::class)
+    ->run($argv);
+```
 
 ## Versioning and support
 

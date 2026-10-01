@@ -56,7 +56,7 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 
 ## How it works
 
-**App setup is code, not config.** The framework never reads a config file. Apps are set up with immutable `with*` methods: `WebApp::withRouterConfigurators(array)`, `WebApp::withErrorHandler()` and `ConsoleApp::withCommandConfigurators(array)`. Each accepts class names or instances. `App::resolve()` resolves class names from the container when the app runs, and throws `InvalidConfigException` for the wrong type. Each app builds its own `Router` (with a fresh `RouteRepository`) or clones its `CommandRunner` on first use, and `__clone` resets that cache, so apps returned by `with*` never share routes or commands.
+**App setup is code, not config.** The framework never reads a config file. Apps are set up with immutable `with*` methods: `WebApp::withRouterConfigurators(array)`, `ConsoleApp::withCommandConfigurators(array)`, and `withErrorHandler()` on both. Each accepts class names or instances. `App::resolve()` resolves class names from the container when the app runs, and throws `InvalidConfigException` for the wrong type. Each app builds its own `Router` (with a fresh `RouteRepository`) or clones its `CommandRunner` on first use, and `__clone` resets that cache, so apps returned by `with*` never share routes or commands.
 
 **Web request flow.** `AppFactory::web(?Container)` returns the container's `WebApp`, and builds a default PHP-DI container when none is given (`AppFactory::console()` does the same for `ConsoleApp`). `WebApp::run($request)` then does the following:
 
@@ -72,7 +72,7 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 - A path starting with `@` is a raw regex, with the `@` stripped.
 - `[type:name]` defines a parameter, and a trailing `?` makes it optional. The types are `i` (int), `a` (alphanumeric), `h` (hex), `*`, `**`, and empty (a single segment).
 
-**Console.** `ConsoleApp::run(array $argv): int` parses `$argv` with `ConsoleInputParser` (index 0 is the script name; the command is the first positional argument or `--command=`; options are `--name=value` or `--flag`). It looks the command up in `CommandRunner` and returns an exit code. `CallableCommandHandler` converts option values to the callable's scalar parameter types and throws `InvalidCommandInputException` for missing or invalid options, which `ConsoleApp` prints. Class handlers get the raw options in `handle(array $params)`.
+**Console.** `ConsoleApp::run(array $argv): int` parses `$argv` with `ConsoleInputParser` (index 0 is the script name; the command is the first positional argument or `--command=`; options are `--name=value` or `--flag`). It looks the command up in `CommandRunner` and returns the command's exit code. `CallableCommandHandler` converts option values to the callable's scalar parameter types and throws `InvalidCommandInputException` for missing or invalid options, which `ConsoleApp` prints (exit code 1). It returns the callable's result when that's an `int`, otherwise 0. Class handlers get the raw options in `handle(array $params): int`. Any other `Throwable` goes to the handler from `ConsoleApp::withErrorHandler()` (`ConsoleErrorHandlerInterface`, which returns the exit code). Without one, the exception is rethrown.
 
 ## Conventions
 

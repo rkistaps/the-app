@@ -36,11 +36,14 @@ class CallableCommandHandler implements CommandHandlerInterface
 
     /**
      * @param array<string, string|true> $params
+     * @return int The callable's return value when it's an int, so a callable can return an exit code. Otherwise 0.
      * @throws InvalidCommandInputException When a required option is missing or a value doesn't fit its type
      */
-    public function handle(array $params = []): void
+    public function handle(array $params = []): int
     {
-        $this->container->call($this->callable, $this->convertParams($params));
+        $result = $this->container->call($this->callable, $this->convertParams($params));
+
+        return is_int($result) ? $result : 0;
     }
 
     /**

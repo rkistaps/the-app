@@ -8,6 +8,9 @@ use TheApp\Exceptions\InvalidConfigException;
 use TheApp\Factories\CommandHandlerFactory;
 use TheApp\Structures\Command;
 
+/**
+ * Registers commands. Command configurators get one.
+ */
 class CommandRunner
 {
     private CommandHandlerFactory $commandHandlerFactory;
@@ -15,6 +18,9 @@ class CommandRunner
     /** @var Command[] */
     private array $commands = [];
 
+    /**
+     * @internal Each console app gets one from the container
+     */
     public function __construct(CommandHandlerFactory $commandHandlerFactory)
     {
         $this->commandHandlerFactory = $commandHandlerFactory;
@@ -34,6 +40,9 @@ class CommandRunner
         return $this;
     }
 
+    /**
+     * @internal Used by ConsoleApp
+     */
     public function findCommandByName(string $name): ?Command
     {
         foreach ($this->commands as $command) {
@@ -46,13 +55,15 @@ class CommandRunner
     }
 
     /**
+     * @internal Used by ConsoleApp
      * @param array<string, string|true> $params
+     * @return int The command's exit code
      * @throws InvalidConfigException
      */
-    public function runCommand(Command $command, array $params = []): void
+    public function runCommand(Command $command, array $params = []): int
     {
         $handler = $this->commandHandlerFactory->fromCommand($command);
 
-        $handler->handle($params);
+        return $handler->handle($params);
     }
 }
