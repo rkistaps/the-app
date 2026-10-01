@@ -63,7 +63,7 @@ Namespace `TheApp\` maps to `src/` and `TheApp\Tests\` maps to `tests/` (PSR-4).
 1. It builds the router from the configurators on first use. `Router::getRouteHandler()` asks `RouteRepository::matchRoute()` for a match. If nothing matches, it throws `NoRouteMatchException`, or `MethodNotAllowedException` when only the method differs (`RouteRepository::findAllowedMethods()`).
 2. The matched route's handler and middlewares are resolved. A callable is wrapped in `CallableRequestHandler` or `CallableMiddleware`. A class name is fetched from the container.
 3. `MiddlewareStackFactory` builds a `MiddlewareStack`. Route parameters are added as request attributes, and the stack handles the request.
-4. Any `Throwable` goes to the handler from `withErrorHandler()`. Without one, the exception is rethrown.
+4. Any `Throwable` goes to the handler from `withErrorHandler()`, together with the request (with the route attributes once a route has matched). Without one, the exception is rethrown.
 
 `HttpResponseEmitter` sends the resulting response.
 

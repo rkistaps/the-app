@@ -95,7 +95,7 @@ class WebApp extends App
 
             $response = $stack->handle($request);
         } catch (Throwable $throwable) {
-            $response = $this->handleErrors($throwable);
+            $response = $this->handleErrors($throwable, $request);
         }
 
         return $response;
@@ -120,16 +120,14 @@ class WebApp extends App
     }
 
     /**
-     * @param Throwable $throwable
-     * @return ResponseInterface
-     * @throws Throwable
+     * @throws Throwable When no error handler is set
      */
-    protected function handleErrors(Throwable $throwable): ResponseInterface
+    protected function handleErrors(Throwable $throwable, ServerRequestInterface $request): ResponseInterface
     {
         if ($this->errorHandler === null) {
             throw $throwable;
         }
 
-        return $this->resolve($this->errorHandler, ErrorHandlerInterface::class)->handle($throwable);
+        return $this->resolve($this->errorHandler, ErrorHandlerInterface::class)->handle($throwable, $request);
     }
 }

@@ -223,13 +223,16 @@ $router->get('/admin', AdminHandler::class)
 
 ### Error handling
 
-`WebApp::run()` catches every exception, including `TheApp\Exceptions\NoRouteMatchException` when no route matches. It passes the exception to the handler set with `withErrorHandler()`, as shown in the [front controller](#2-front-controller). Without one, the exception is rethrown from `run()`. TheApp doesn't register any global error or exception handlers.
+`WebApp::run()` catches every exception, including `TheApp\Exceptions\NoRouteMatchException` when no route matches. It passes the exception and the request to the handler set with `withErrorHandler()`, as shown in the [front controller](#2-front-controller). Without one, the exception is rethrown from `run()`. TheApp doesn't register any global error or exception handlers.
+
+The request lets the error response depend on it, for example JSON for API paths or for clients that send `Accept: application/json`. Once a route has matched, the request also has the route parameters.
 
 ```php
 namespace Acme\Errors;
 
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TheApp\Exceptions\MethodNotAllowedException;
 use TheApp\Exceptions\NoRouteMatchException;
 use TheApp\Interfaces\ErrorHandlerInterface;
@@ -241,7 +244,7 @@ final class ErrorHandler implements ErrorHandlerInterface
     {
     }
 
-    public function handle(Throwable $throwable): ResponseInterface
+    public function handle(Throwable $throwable, ServerRequestInterface $request): ResponseInterface
     {
         if ($throwable instanceof MethodNotAllowedException) {
             return $this->responses->createResponse(405)
@@ -249,9 +252,16 @@ final class ErrorHandler implements ErrorHandlerInterface
         }
 
         $status = $throwable instanceof NoRouteMatchException ? 404 : 500;
+        $message = $status === 404 ? 'Not found' : 'Something went wrong';
 
         $response = $this->responses->createResponse($status);
-        $response->getBody()->write($status === 404 ? 'Not found' : 'Something went wrong');
+        if (str_contains($request->getHeaderLine('Accept'), 'application/json')) {
+            $response->getBody()->write(json_encode(['error' => $message]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        $response->getBody()->write($message);
 
         return $response;
     }

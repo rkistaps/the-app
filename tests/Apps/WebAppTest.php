@@ -13,6 +13,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use RuntimeException;
 use stdClass;
 use TheApp\Apps\WebApp;
 use TheApp\Components\Router;
@@ -112,16 +113,36 @@ class WebAppTest extends MockeryTestCase
 
     public function testErrorHandlerHandlesExceptions()
     {
+        $request = $this->request('/missing');
         $handler = Mockery::mock(ErrorHandlerInterface::class);
         $handler->shouldReceive('handle')
             ->once()
-            ->with(Mockery::type(NoRouteMatchException::class))
+            ->with(Mockery::type(NoRouteMatchException::class), $request)
             ->andReturn($this->response);
         $this->container->set('errorHandler', $handler);
 
         $app = $this->app->withErrorHandler('errorHandler');
 
-        $this->assertSame($this->response, $app->run($this->request('/missing')));
+        $this->assertSame($this->response, $app->run($request));
+    }
+
+    public function testErrorHandlerGetsRequestWithRouteAttributes()
+    {
+        $exception = new RuntimeException('Handler failed');
+        $request = $this->request('/users/7');
+        $withId = Mockery::mock(ServerRequestInterface::class);
+        $request->shouldReceive('withAttribute')->with('id', '7')->andReturn($withId);
+
+        $handler = Mockery::mock(ErrorHandlerInterface::class);
+        $handler->shouldReceive('handle')->once()->with($exception, $withId)->andReturn($this->response);
+
+        $app = $this->app
+            ->withRouterConfigurators([$this->routes(fn(Router $router) => $router->get('/users/[i:id]', function () use ($exception) {
+                throw $exception;
+            }))])
+            ->withErrorHandler($handler);
+
+        $this->assertSame($this->response, $app->run($request));
     }
 
     public function testInvalidErrorHandlerThrows()
