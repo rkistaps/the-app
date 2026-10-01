@@ -8,34 +8,18 @@ use Closure;
 use TheApp\Interfaces\ConfigInterface;
 
 /**
- * Class ArrayConfig
- * @package TheApp\Components
+ * Config read from an array. Nested values are read with dot notation, such as "database.host".
  */
 class ArrayConfig implements ConfigInterface
 {
-    /**
-     * Config data
-     * @var array
-     */
-    private $data = [];
-
-    /**
-     * ArrayConfig constructor.
-     * @param array $data
-     */
-    public function __construct(array $data = [])
+    public function __construct(private array $data = [])
     {
-        $this->data = $data;
     }
 
     /**
-     * Get config value by key. Nested values are read with dot notation, such as "database.host".
-     * A Closure default is called only when the key is missing.
-     * @param string $key
-     * @param mixed|null $default
-     * @return mixed
+     * @param mixed $default Returned when the key is missing. A Closure is called only then, and its result returned.
      */
-    public function get(string $key, $default = null)
+    public function get(string $key, mixed $default = null): mixed
     {
         if (isset($this->data[$key])) {
             return $this->data[$key];

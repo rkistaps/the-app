@@ -5,16 +5,12 @@ declare(strict_types=1);
 namespace TheApp\Interfaces;
 
 /**
- * Class ConfigInterface
- * @package TheApp\Interfaces
+ * Settings for your own code to read. TheApp doesn't read any itself.
  */
 interface ConfigInterface
 {
     /**
-     * Get config value by key
-     * @param string $key
-     * @param mixed|null $default
-     * @return mixed
+     * @param mixed $default Returned when the key is missing
      */
-    public function get(string $key, $default = null);
+    public function get(string $key, mixed $default = null): mixed;
 }
