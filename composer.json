@@ -10,7 +10,11 @@
   ],
   "autoload": {
     "psr-4": {
-      "TheApp\\": "src/",
+      "TheApp\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
       "TheApp\\Tests\\": "tests/"
     }
   },
